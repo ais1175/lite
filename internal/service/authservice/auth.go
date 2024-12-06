@@ -2,7 +2,9 @@ package authservice
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/auth"
@@ -35,20 +37,26 @@ func New(db *bun.DB) *Auth {
 // RegisterUser will register the user, not shit, but we need to make sure this is
 // only for non-admin users. The actual admin user should have the defalt admin password
 // unless changed in ENV, and then be prompted to change it. That should probably be required.
-func (a *Auth) RegisterUser(ctx context.Context, register *api.RegisterRequest) {
-	// Check if user exists
+func (a *Auth) RegisterUser(ctx context.Context, register *api.RegisterRequest) (string, error) {
 	exists := a.userExists(ctx, register.Email)
 	if exists {
-		fmt.Println("User already exists")
-		return
-	}
-	// Create user
-	err := a.createUser(ctx, register)
-	if err != nil {
-		fmt.Println(err)
+		return "", errors.New("user already exists")
 	}
 
-	// Return a JWT or smth
+	userID, err := a.createUser(ctx, register)
+	if err != nil {
+		return "", err
+	}
+
+	sessionID, err := a.createSession(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+
+	// not sure if we really need to return anything else than the error here
+	// we can instead create a session as another call and then add that sessionId
+	// as a cookie
+	return sessionID, nil
 }
 
 // Login uses email and password to authenticate the user
@@ -84,18 +92,16 @@ func (a *Auth) userExists(ctx context.Context, email string) bool {
 		return false
 	}
 
-	fmt.Println("User exists", user)
-
 	return user.ID != 0
 }
 
 // CreateUser creates a new user with email and password
-func (a *Auth) createUser(ctx context.Context, register *api.RegisterRequest) error {
+func (a *Auth) createUser(ctx context.Context, register *api.RegisterRequest) (int64, error) {
 	var err error
 	hash, err := crypt.HashPassword(register.Password)
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return 0, err
 	}
 
 	user := &database.User{
@@ -103,12 +109,39 @@ func (a *Auth) createUser(ctx context.Context, register *api.RegisterRequest) er
 		PasswordHash: hash,
 	}
 
-	fmt.Println("Creating user", user)
-
+	// this should be a tx, so we can rollback if we fail to get the LID
 	_, err = a.db.NewInsert().Model(user).Exec(ctx)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return 3, nil
+
+	// return userID, nil
+}
+
+// not sure if this should be public or not yet
+func (a *Auth) createSession(ctx context.Context, userID int64) (string, error) {
+	sessionID, err := crypt.GenerateSessionID()
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Println("do we get session id", sessionID)
+
+	session := &database.Session{
+		ID:        sessionID,
+		UserID:    int(userID),
+		ExpiresAt: time.Now().Add(time.Hour * 24),
+	}
+
+	_, err = a.db.NewInsert().Model(session).Exec(ctx)
+	if err != nil {
+		fmt.Println("oh my god", err)
+		return "", nil
+	}
+
+	fmt.Println("is the session id here", session.ID)
+
+	return session.ID, nil
 }

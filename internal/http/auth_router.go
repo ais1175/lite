@@ -3,6 +3,8 @@ package http
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/service/authservice"
@@ -13,7 +15,6 @@ func (r *Server) authRouterGroup(group *echo.Group, authService *authservice.Aut
 	authGroup := group.Group("/auth")
 
 	authGroup.POST("/register", func(c echo.Context) error {
-		fmt.Println("register")
 		ctx := context.Background()
 
 		var register api.RegisterRequest
@@ -21,8 +22,28 @@ func (r *Server) authRouterGroup(group *echo.Group, authService *authservice.Aut
 			return err
 		}
 
-		authService.RegisterUser(ctx, &register)
+		sessionID, err := authService.RegisterUser(ctx, &register)
+		if err != nil {
+			log.Println("error: ", err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to register user")
+		}
 
+		fmt.Println("session id", sessionID)
+
+		sessionCookie := &http.Cookie{
+			Name:     "fm_session",
+			Value:    sessionID,
+			Secure:   false,
+			SameSite: http.SameSiteLaxMode,
+			HttpOnly: true,
+			Path:     "/",
+			MaxAge:   3600,
+		}
+		c.SetCookie(sessionCookie)
+		return c.Redirect(http.StatusPermanentRedirect, "/app")
+	})
+
+	authGroup.GET("/session", func(c echo.Context) error {
 		return nil
 	})
 
