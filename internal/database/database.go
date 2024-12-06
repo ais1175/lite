@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/uptrace/bun"
 )
@@ -15,6 +16,13 @@ type User struct {
 	AuthProvider  string `bun:"auth_provider"`
 	AuthID        string `bun:"auth_id"`
 	Avatar        string `bun:"avatar"`
+}
+
+type Session struct {
+	bun.BaseModel `bun:"table:session"`
+	ID            string    `bun:"id,pk"`
+	UserID        int       `bun:"user_id"`
+	ExpiresAt     time.Time `bun:"expires_at"`
 }
 
 type Store interface {

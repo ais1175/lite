@@ -11,7 +11,7 @@ import (
 type MySQL struct{}
 
 func (r *MySQL) Connect() *bun.DB {
-	sqldb, err := sql.Open("mysql", "root:pass@localhost/test")
+	sqldb, err := sql.Open("mysql", "root:root@tcp(localhost)/fivemanage-lite-dev")
 	if err != nil {
 		panic(err)
 	}

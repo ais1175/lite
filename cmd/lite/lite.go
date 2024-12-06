@@ -48,7 +48,7 @@ var (
 			server := http.NewServer(authService)
 
 			srv := &nethttp.Server{
-				Addr:    fmt.Sprintf(":%d", port),
+				Addr:    fmt.Sprintf("localhost:%d", port),
 				Handler: server.Engine,
 			}
 
@@ -79,7 +79,7 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().String("driver", "sqlite", "Database driver")
+	rootCmd.PersistentFlags().String("driver", "mysql", "Database driver")
 	runCmd.Flags().Int("port", 8080, "Port to serve Fivemanage")
 
 	viper.BindPFlag("driver", rootCmd.PersistentFlags().Lookup("driver"))
