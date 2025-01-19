@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -28,40 +27,33 @@ func (r *Server) authRouterGroup(group *echo.Group, authService *authservice.Aut
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to register user")
 		}
 
-		fmt.Println("session id", sessionID)
-
-		sessionCookie := &http.Cookie{
-			Name:     "fm_session",
-			Value:    sessionID,
-			Secure:   false,
-			SameSite: http.SameSiteLaxMode,
-			HttpOnly: true,
-			Path:     "/",
-			MaxAge:   3600,
-		}
+		sessionCookie := authService.CreateSessionCookie(sessionID)
 		c.SetCookie(sessionCookie)
-		return c.Redirect(http.StatusPermanentRedirect, "/app")
+		return c.Redirect(http.StatusSeeOther, "/app")
 	})
 
 	authGroup.GET("/session", func(c echo.Context) error {
-		return nil
+		ctx := context.Background()
+
+		sessionCookie, err := c.Cookie("fmlite_session")
+		if err != nil {
+			return c.JSON(http.StatusForbidden, "failed to find session cookie")
+		}
+
+		user, err := authService.UserBySession(ctx, sessionCookie.Value)
+		if err != nil {
+			return c.JSON(http.StatusForbidden, "failed to find session cookie")
+		}
+
+		return c.JSON(http.StatusOK, echo.Map{
+			"status": "ok",
+			"data":   user,
+		})
 	})
 
 	authGroup.POST("/login", func(c echo.Context) error {
 		authService.LoginUser()
 
 		return nil
-	})
-
-	authGroup.GET("/callback/github", func(c echo.Context) error {
-		code := c.QueryParam("code")
-
-		token := authService.Callback(code)
-
-		return c.JSON(200, echo.Map{
-			"token":          token.AccessToken,
-			"resfresh_token": token.RefreshToken,
-			"expiry":         token.Expiry,
-		})
 	})
 }

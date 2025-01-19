@@ -1,3 +1,12 @@
+import { useSession } from "@/features/auth/api/useSession";
+
 export const AppDashboard: React.FC = () => {
-  return <div>AppDashboard</div>;
+  const data = useSession();
+
+  return (
+    <div>
+      <h1>dashboard</h1>
+      <pre>{JSON.stringify(data)}</pre>
+    </div>
+  );
 };

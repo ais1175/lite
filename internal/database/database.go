@@ -21,8 +21,9 @@ type User struct {
 type Session struct {
 	bun.BaseModel `bun:"table:session"`
 	ID            string    `bun:"id,pk"`
-	UserID        int       `bun:"user_id"`
 	ExpiresAt     time.Time `bun:"expires_at"`
+	UserID        int       `bun:"user_id"`
+	User          *User     `bun:"rel:belongs-to,join:user_id=id"`
 }
 
 type Store interface {

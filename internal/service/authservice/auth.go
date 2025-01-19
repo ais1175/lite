@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/fivemanage/lite/api"
@@ -34,7 +35,7 @@ func New(db *bun.DB) *Auth {
 	}
 }
 
-// RegisterUser will register the user, not shit, but we need to make sure this is
+// RegisterUser will register the user, no shit, but we need to make sure this is
 // only for non-admin users. The actual admin user should have the defalt admin password
 // unless changed in ENV, and then be prompted to change it. That should probably be required.
 func (a *Auth) RegisterUser(ctx context.Context, register *api.RegisterRequest) (string, error) {
@@ -110,14 +111,18 @@ func (a *Auth) createUser(ctx context.Context, register *api.RegisterRequest) (i
 	}
 
 	// this should be a tx, so we can rollback if we fail to get the LID
-	_, err = a.db.NewInsert().Model(user).Exec(ctx)
+	res, err := a.db.NewInsert().Model(user).Exec(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	return 3, nil
+	// this should be the userID
+	lid, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
 
-	// return userID, nil
+	return lid, nil
 }
 
 // not sure if this should be public or not yet
@@ -127,8 +132,6 @@ func (a *Auth) createSession(ctx context.Context, userID int64) (string, error) 
 		return "", err
 	}
 
-	fmt.Println("do we get session id", sessionID)
-
 	session := &database.Session{
 		ID:        sessionID,
 		UserID:    int(userID),
@@ -137,11 +140,35 @@ func (a *Auth) createSession(ctx context.Context, userID int64) (string, error) 
 
 	_, err = a.db.NewInsert().Model(session).Exec(ctx)
 	if err != nil {
-		fmt.Println("oh my god", err)
 		return "", nil
 	}
 
-	fmt.Println("is the session id here", session.ID)
-
 	return session.ID, nil
+}
+
+func (a *Auth) UserBySession(ctx context.Context, sessionID string) (*api.User, error) {
+	session := new(database.Session)
+	err := a.db.NewSelect().Model(session).Relation("User").Where("session.id = ?", sessionID).Limit(1).Scan(ctx)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return &api.User{
+		Name:   nil,
+		Email:  session.User.Email,
+		Avatar: session.User.Avatar,
+	}, nil
+}
+
+func (a *Auth) CreateSessionCookie(sessionID string) *http.Cookie {
+	return &http.Cookie{
+		Name:     "fmlite_session",
+		Value:    sessionID,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		HttpOnly: true,
+		Path:     "/",
+		MaxAge:   3600,
+	}
 }
