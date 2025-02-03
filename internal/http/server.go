@@ -3,6 +3,7 @@ package http
 import (
 	"embed"
 	nethttp "net/http"
+	"strings"
 
 	"github.com/fivemanage/lite/internal/service/authservice"
 	"github.com/labstack/echo/v4"
@@ -41,7 +42,7 @@ func NewServer(authService *authservice.Auth) *Server {
 		Filesystem: nethttp.FS(webContent),
 		HTML5:      true,
 		Skipper: func(c echo.Context) bool {
-			return c.Request().URL.Path == "/api/auth/login"
+			return strings.HasPrefix(c.Request().URL.Path, "/api")
 		},
 	}))
 

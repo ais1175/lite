@@ -154,7 +154,12 @@ func (a *Auth) UserBySession(ctx context.Context, sessionID string) (*api.User, 
 		return nil, err
 	}
 
+	if time.Now().After(session.ExpiresAt) {
+		return nil, ErrSessionExpired{}
+	}
+
 	return &api.User{
+		ID:     session.User.ID,
 		Name:   nil,
 		Email:  session.User.Email,
 		Avatar: session.User.Avatar,

@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router";
 import { AuthRoute } from "./features/auth/routes/AuthRoute";
-import { ProtectedRoute } from "./features/auth/routes/ProtectedRoute";
 import { AppDashboard } from "./features/app/routes/AppDashboard";
+import { AppLayout } from "./features/app/components/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -12,7 +12,9 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<AuthRoute />} />
-          <Route path="/app" element={<AppDashboard />} />
+          <Route path="/app" element={<AppLayout />}>
+            <Route index element={<AppDashboard />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

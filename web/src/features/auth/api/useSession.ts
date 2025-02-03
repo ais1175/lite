@@ -2,7 +2,7 @@ import { QueryKeys } from "@/typings/query";
 import { fetchApi } from "@/utils/http-util";
 import { useQuery } from "@tanstack/react-query";
 
-export const useSession = () => {
+export function useSession() {
   console.log("getting session");
   const { data } = useQuery({
     queryKey: [QueryKeys.Session],
@@ -10,4 +10,4 @@ export const useSession = () => {
   });
 
   return data;
-};
+}

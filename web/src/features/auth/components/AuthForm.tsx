@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { IS_DEV } from "@/utils/http-util";
 import { useForm } from "react-hook-form";
 import z from "zod";

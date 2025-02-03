@@ -26,6 +26,14 @@ type Session struct {
 	User          *User     `bun:"rel:belongs-to,join:user_id=id"`
 }
 
+type Organization struct {
+	bun.BaseModel `bun:"table:organization"`
+	ID            string `bun:"id,pk"`
+	OwnerID       string `bun:"owner_Id"`
+	Name          string `bun:"name"`
+	User          *User  `bun:"rel:belongs-to,join:owner_id=id"`
+}
+
 type Store interface {
 	Connect() *bun.DB
 }

@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 
@@ -23,6 +24,8 @@ func (r *Server) authRouterGroup(group *echo.Group, authService *authservice.Aut
 
 		sessionID, err := authService.RegisterUser(ctx, &register)
 		if err != nil {
+			if errors.Is(err, authservice.ErrSessionExpired{}) {
+			}
 			log.Println("error: ", err.Error())
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to register user")
 		}
@@ -42,6 +45,9 @@ func (r *Server) authRouterGroup(group *echo.Group, authService *authservice.Aut
 
 		user, err := authService.UserBySession(ctx, sessionCookie.Value)
 		if err != nil {
+			if errors.Is(err, authservice.ErrSessionExpired{}) {
+				return c.Redirect(http.StatusUnauthorized, "/auth")
+			}
 			return c.JSON(http.StatusForbidden, "failed to find session cookie")
 		}
 
