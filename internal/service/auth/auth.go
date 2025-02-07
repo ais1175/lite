@@ -1,16 +1,20 @@
-package authservice
+package auth
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/auth"
 	"github.com/fivemanage/lite/internal/crypt"
 	"github.com/fivemanage/lite/internal/database"
+	"github.com/fivemanage/lite/internal/helper/strings"
+	"github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 	"golang.org/x/oauth2"
 )
@@ -35,9 +39,61 @@ func New(db *bun.DB) *Auth {
 	}
 }
 
+// CreateAdminUser creates the initial admin user if none exists
+
+func (a *Auth) CreateAdminUser() error {
+	var err error
+	ctx := context.Background()
+
+	user := new(database.User)
+	err = a.db.NewSelect().Model(user).Limit(1).Scan(ctx)
+	if err != nil {
+		// todo: create a database.selectError func
+		if errors.Is(err, sql.ErrNoRows) {
+			logrus.Info("Found no admin user. Attempting to create one.")
+		} else {
+			return err
+		}
+	}
+
+	// it can only be one admin
+	if user.IsAdmin {
+		return nil
+	}
+
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	if adminPassword == "" {
+		return errors.New("Admin password is missing. Make sure ADMIN_PASSWORD is set.")
+	}
+
+	passwordHash, err := crypt.HashPassword(adminPassword)
+	if err != nil {
+		return err
+	}
+
+	admin := &database.User{
+		Name:         "Admin",
+		PasswordHash: passwordHash,
+		Username:     "admin",
+		IsAdmin:      true,
+	}
+	_, err = a.db.NewInsert().Model(admin).Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	logrus.Info("Successfully created admin user. Proceeding.")
+
+	return nil
+}
+
 // RegisterUser will register the user, no shit, but we need to make sure this is
 // only for non-admin users. The actual admin user should have the defalt admin password
 // unless changed in ENV, and then be prompted to change it. That should probably be required.
+
+// we will probably remove this, and init everything with an admin user which can create users instead
+// .... I guess we can keep it for that thouugh
+// doesnt' make much sense to have a register outside anyways
 func (a *Auth) RegisterUser(ctx context.Context, register *api.RegisterRequest) (string, error) {
 	exists := a.userExists(ctx, register.Email)
 	if exists {
@@ -61,7 +117,21 @@ func (a *Auth) RegisterUser(ctx context.Context, register *api.RegisterRequest) 
 }
 
 // Login uses email and password to authenticate the user
-func (a *Auth) LoginUser() {
+func (a *Auth) LoginUser(ctx context.Context, username, password string) (string, error) {
+	user, err := a.getUserByCredentials(ctx, username, password)
+	if err != nil {
+		return "", err
+	}
+
+	sessionID, err := a.createSession(ctx, user.ID)
+	if err != nil {
+		return "", err
+	}
+
+	// not sure if we really need to return anything else than the error here
+	// we can instead create a session as another call and then add that sessionId
+	// as a cookie
+	return sessionID, nil
 }
 
 // OAuthLogin uses OAuth2 to authenticate the user
@@ -82,6 +152,7 @@ func (a *Auth) Callback(code string) *oauth2.Token {
 	return token
 }
 
+// we probably dont need this function anymore...maybe
 func (a *Auth) userExists(ctx context.Context, email string) bool {
 	user := new(database.User)
 	err := a.db.NewSelect().Model(user).Where("email = ?", email).Scan(ctx)
@@ -125,6 +196,27 @@ func (a *Auth) createUser(ctx context.Context, register *api.RegisterRequest) (i
 	return lid, nil
 }
 
+func (a *Auth) getUserByCredentials(ctx context.Context, username, password string) (*database.User, error) {
+	var err error
+
+	user := new(database.User)
+	err = a.db.NewSelect().Model(user).Where("username = ?", username).Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, &ErrUserCredentials{}
+		} else {
+			return nil, err
+		}
+	}
+
+	err = crypt.ComparePassword(user.PasswordHash, password)
+	if err != nil {
+		return nil, &ErrUserCredentials{}
+	}
+
+	return user, nil
+}
+
 // not sure if this should be public or not yet
 func (a *Auth) createSession(ctx context.Context, userID int64) (string, error) {
 	sessionID, err := crypt.GenerateSessionID()
@@ -159,10 +251,12 @@ func (a *Auth) UserBySession(ctx context.Context, sessionID string) (*api.User, 
 	}
 
 	return &api.User{
-		ID:     session.User.ID,
-		Name:   nil,
-		Email:  session.User.Email,
-		Avatar: session.User.Avatar,
+		ID:       session.User.ID,
+		Username: session.User.Username,
+		IsAdmin:  session.User.IsAdmin,
+		Name:     strings.Null(session.User.Name),
+		Email:    strings.Null(session.User.Email),
+		Avatar:   strings.Null(session.User.Avatar),
 	}, nil
 }
 

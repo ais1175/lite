@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/Form";
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  username: z.string(),
   password: z.string(),
 });
 
@@ -39,7 +39,7 @@ export function AuthForm({
 
   const handleRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
     console.log({ data });
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -68,12 +68,12 @@ export function AuthForm({
                 <div className="grid gap-2">
                   <FormField
                     control={formMethods.control}
-                    name="email"
+                    name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>Username</FormLabel>
                         <FormControl>
-                          <Input placeholder="your@email.com" {...field} />
+                          <Input {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -102,12 +102,6 @@ export function AuthForm({
                 <Button type="submit" className="w-full">
                   Register
                 </Button>
-              </div>
-              <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <a href="#" className="underline underline-offset-4">
-                  Sign up
-                </a>
               </div>
             </form>
           </Form>

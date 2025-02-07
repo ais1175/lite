@@ -1,14 +1,20 @@
 package api
 
-// RegisterRequest is only used for email and password registration
 type RegisterRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
+type LoginRequest struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
 type User struct {
-	ID     int     `json:"id"`
-	Name   *string `json:"name"`
-	Email  string  `json:"email"`
-	Avatar string  `json:"avatar"`
+	ID       int64   `json:"id"`
+	Name     *string `json:"name"`
+	Username string  `json:"username"`
+	Email    *string `json:"email"`
+	Avatar   *string `json:"avatar"`
+	IsAdmin  bool    `json:"isAdmin"`
 }

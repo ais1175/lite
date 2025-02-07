@@ -12,9 +12,10 @@ import (
 
 	"github.com/fivemanage/lite/internal/database"
 	"github.com/fivemanage/lite/internal/http"
-	"github.com/fivemanage/lite/internal/service/authservice"
+	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/fivemanage/lite/migrate"
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -34,20 +35,32 @@ var (
 		Use:   "run",
 		Short: "Run fivemanage application",
 		Run: func(cmd *cobra.Command, args []string) {
+			var err error
+
 			port := viper.GetInt("port")
 			driver := viper.GetString("driver")
 
-			err := godotenv.Load()
+			err = godotenv.Load()
 			// TODO: Only for development
 			if err != nil {
-				log.Fatal("Error loading .env file.")
+				log.Fatal("Error loading .env file. Probably becasue we're in production")
 			}
 
 			db := database.New(driver, "")
+			// todo: handle connection error properly
 			store := db.Connect()
 
-			authService := authservice.New(store)
+			authService := auth.New(store)
+
 			server := http.NewServer(authService)
+
+			// todo: check if we have an admin user
+			// if not, create an admin user with the ADMIN_PASSWORD ENV
+			err = authService.CreateAdminUser()
+			if err != nil {
+				logrus.WithError(err).Error("Failed to create admin user")
+				return
+			}
 
 			srv := &nethttp.Server{
 				Addr:    fmt.Sprintf("localhost:%d", port),
