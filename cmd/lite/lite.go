@@ -13,6 +13,7 @@ import (
 	"github.com/fivemanage/lite/internal/database"
 	"github.com/fivemanage/lite/internal/http"
 	"github.com/fivemanage/lite/internal/service/auth"
+	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/migrate"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -48,15 +49,21 @@ var (
 
 			db := database.New(driver, "")
 			// todo: handle connection error properly
+			// we'll probably create a secondary layer with db funcs
+			// instead of raw dogging it in each service
 			store := db.Connect()
 
-			authService := auth.New(store)
+			authservice := auth.New(store)
+			tokenservice := token.NewService(store)
 
-			server := http.NewServer(authService)
+			server := http.NewServer(
+				authservice,
+				tokenservice,
+			)
 
 			// todo: check if we have an admin user
 			// if not, create an admin user with the ADMIN_PASSWORD ENV
-			err = authService.CreateAdminUser()
+			err = authservice.CreateAdminUser()
 			if err != nil {
 				logrus.WithError(err).Error("Failed to create admin user")
 				return

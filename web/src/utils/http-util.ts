@@ -1,5 +1,10 @@
 export const IS_DEV = import.meta.env.DEV;
 
+type ApiResponse<T> = {
+  status: string;
+  data: T;
+};
+
 export class ApiError extends Error {
   constructor(error: string, errorMessage: string) {
     super(error);
@@ -8,13 +13,20 @@ export class ApiError extends Error {
   }
 }
 
-export async function fetchApi(input: string | URL, init?: RequestInit) {
+export async function fetchApi<T = unknown>(
+  input: string | URL,
+  init?: RequestInit,
+): Promise<T | undefined> {
   try {
     const res = await fetch(input, {
       ...init,
       credentials: "include",
     });
     if (!res.ok) {
+      if (IS_DEV && res.status === 401) {
+        window.location.href = "/auth";
+      }
+
       const errorResponse = (await res.json()) as {
         error: string;
         message: string;
@@ -23,7 +35,8 @@ export async function fetchApi(input: string | URL, init?: RequestInit) {
       throw new ApiError(errorResponse.error, errorResponse.message);
     }
 
-    return await res.json();
+    const response = (await res.json()) as ApiResponse<T>;
+    return response.data;
   } catch (err) {
     if (err instanceof Error) {
       throw new Error(err.message);

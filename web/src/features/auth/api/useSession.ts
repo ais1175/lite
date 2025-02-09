@@ -1,12 +1,12 @@
 import { QueryKeys } from "@/typings/query";
+import { Session } from "@/typings/user";
 import { fetchApi } from "@/utils/http-util";
 import { useQuery } from "@tanstack/react-query";
 
 export function useSession() {
-  console.log("getting session");
   const { data } = useQuery({
     queryKey: [QueryKeys.Session],
-    queryFn: () => fetchApi("/api/auth/session"),
+    queryFn: () => fetchApi<Session>("/api/auth/session"),
   });
 
   return data;

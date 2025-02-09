@@ -1,4 +1,11 @@
-import { ChartArea, Folders, Layers, Settings, Users } from "lucide-react";
+import {
+  ChartArea,
+  Folders,
+  KeyRound,
+  Layers,
+  Settings,
+  Users,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -7,6 +14,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/Sidebar";
@@ -15,28 +23,39 @@ import {
 const items = [
   {
     title: "Files",
-    url: "#",
+    url: "/app/files",
     icon: Folders,
+    comingSoon: false,
+  },
+  {
+    title: "Tokens",
+    url: "/app/tokens",
+    icon: KeyRound,
+    comingSoon: false,
   },
   {
     title: "Logs",
     url: "#",
     icon: Layers,
+    comingSoon: true,
   },
   {
     title: "Team",
     url: "#",
     icon: Users,
+    comingSoon: true,
   },
   {
     title: "Usage",
     url: "#",
     icon: ChartArea,
+    comingSoon: true,
   },
   {
     title: "Settings",
     url: "#",
     icon: Settings,
+    comingSoon: true,
   },
 ];
 
@@ -45,7 +64,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Spectr</SidebarGroupLabel>
+          <SidebarGroupLabel>Fivemanage Lite (0.2.8)</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -56,6 +75,9 @@ export function AppSidebar() {
                       <span>{item.title}</span>
                     </a>
                   </SidebarMenuButton>
+                  {item.comingSoon && (
+                    <SidebarMenuBadge>Coming soon</SidebarMenuBadge>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

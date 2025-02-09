@@ -9,3 +9,11 @@ func GenerateSessionID() (string, error) {
 	}
 	return id, nil
 }
+
+func GenerateApiKey() (string, error) {
+	apiKey, err := gonanoid.Generate("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz", 64)
+	if err != nil {
+		return "", err
+	}
+	return apiKey, nil
+}

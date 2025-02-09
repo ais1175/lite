@@ -45,6 +45,23 @@ type OrganizationMember struct {
 	Organization   *Organization `bun:"rel:belongs-to,join:organization_id=id"`
 }
 
+type Token struct {
+	bun.BaseModel `bun:"table:file"`
+	ID            int64  `bun:"id,pk,autoincrement"`
+	TokenHash     string `bun:"token_hash"`
+	Identifier    string `bun:"identifier"`
+	UserID        int    `bun:"user_id"`
+	User          *User  `bun:"rel:belongs-to,join:user_id=id"`
+}
+
+type File struct {
+	bun.BaseModel  `bun:"table:file"`
+	Key            string        `bun:"key"`
+	Size           int64         `bun:"size"`
+	OrganizationID int           `bun:"organization_id"`
+	Organization   *Organization `bun:"rel:belongs-to,join:organization_id=id"`
+}
+
 type Store interface {
 	Connect() *bun.DB
 }

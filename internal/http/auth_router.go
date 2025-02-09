@@ -40,7 +40,7 @@ func (r *Server) authRouterGroup(group *echo.Group, authService *auth.Auth) {
 
 		sessionCookie, err := c.Cookie("fmlite_session")
 		if err != nil {
-			return c.JSON(http.StatusForbidden, "failed to find session cookie")
+			return c.JSON(http.StatusUnauthorized, "failed to find session cookie")
 		}
 
 		user, err := authService.UserBySession(ctx, sessionCookie.Value)

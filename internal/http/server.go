@@ -5,7 +5,9 @@ import (
 	nethttp "net/http"
 	"strings"
 
+	"github.com/fivemanage/lite/internal/http/internalapi"
 	"github.com/fivemanage/lite/internal/service/auth"
+	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/labstack/echo/v4"
 
 	"github.com/go-playground/validator/v10"
@@ -24,7 +26,7 @@ type Server struct {
 }
 
 // TODO: Add sentry for monitoring. There should be an opt-out option.
-func NewServer(authService *auth.Auth) *Server {
+func NewServer(authservice *auth.Auth, tokenservice *token.Service) *Server {
 	engine := echo.New()
 	srv := &Server{
 		Engine: engine,
@@ -48,7 +50,13 @@ func NewServer(authService *auth.Auth) *Server {
 
 	apiGroup := srv.Engine.Group("/api")
 
-	srv.authRouterGroup(apiGroup, authService)
+	internalapi.Add(
+		apiGroup,
+		authservice,
+		tokenservice,
+	)
+
+	// srv.authRouterGroup(apiGroup, authService)
 	srv.imageRouterGroup(apiGroup)
 
 	return srv

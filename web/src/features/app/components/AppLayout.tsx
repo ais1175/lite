@@ -3,7 +3,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/Sidebar";
-import { Outlet } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import { AppSidebar } from "./AppSidebar";
 import { Separator } from "@/components/ui/Separator";
 import {
@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/Breadcrumb";
 
 export function AppLayout() {
+  const location = useLocation();
+  const paths = location.pathname.split("/").filter((p) => p);
+  console.log(paths);
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -26,16 +30,24 @@ export function AppLayout() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">App</BreadcrumbLink>
+                <BreadcrumbLink asChild>
+                  <Link to="/app">{paths[0]}</Link>
+                </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Overview</BreadcrumbPage>
-              </BreadcrumbItem>
+              {paths
+                .filter((p) => p !== "app")
+                .map((path) => (
+                  <BreadcrumbItem key={path}>
+                    <BreadcrumbPage>{path}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                ))}
             </BreadcrumbList>
           </Breadcrumb>
         </header>
-        <Outlet />
+        <main className="p-4">
+          <Outlet />
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

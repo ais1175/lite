@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { AuthRoute } from "./features/auth/routes/AuthRoute";
 import { AppDashboard } from "./features/app/routes/AppDashboard";
 import { AppLayout } from "./features/app/components/AppLayout";
+import { TokensRoute } from "./features/tokens/routes/TokensRoute";
 
 const queryClient = new QueryClient();
 
@@ -14,6 +15,8 @@ function App() {
           <Route path="/auth" element={<AuthRoute />} />
           <Route path="/app" element={<AppLayout />}>
             <Route index element={<AppDashboard />} />
+
+            <Route path="tokens" element={<TokensRoute />} />
           </Route>
         </Routes>
       </BrowserRouter>
