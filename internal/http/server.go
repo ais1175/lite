@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/fivemanage/lite/internal/http/internalapi"
+	_validator "github.com/fivemanage/lite/internal/http/validator"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/labstack/echo/v4"
@@ -32,11 +33,11 @@ func NewServer(authservice *auth.Auth, tokenservice *token.Service) *Server {
 		Engine: engine,
 	}
 
-	srv.Engine.Validator = &CustomValidator{validator: validator.New()}
+	srv.Engine.Validator = &_validator.CustomValidator{Validator: validator.New()}
 
 	// TODO: lets use 'logrus' for logging
 
-	// srv.Engine.Use(middleware.Logger())
+	srv.Engine.Use(middleware.Logger())
 	srv.Engine.Use(middleware.Recover())
 
 	srv.Engine.Use(middleware.StaticWithConfig(middleware.StaticConfig{
@@ -56,7 +57,7 @@ func NewServer(authservice *auth.Auth, tokenservice *token.Service) *Server {
 		tokenservice,
 	)
 
-	// srv.authRouterGroup(apiGroup, authService)
+	srv.authRouterGroup(apiGroup, authservice)
 	srv.imageRouterGroup(apiGroup)
 
 	return srv

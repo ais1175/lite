@@ -21,6 +21,9 @@ export async function fetchApi<T = unknown>(
     const res = await fetch(input, {
       ...init,
       credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     if (!res.ok) {
       if (IS_DEV && res.status === 401) {

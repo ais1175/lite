@@ -1,4 +1,4 @@
-package http
+package validator
 
 import (
 	"fmt"
@@ -9,11 +9,11 @@ import (
 )
 
 type CustomValidator struct {
-	validator *validator.Validate
+	Validator *validator.Validate
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
-	if err := cv.validator.Struct(i); err != nil {
+	if err := cv.Validator.Struct(i); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 

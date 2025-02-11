@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/fivemanage/lite/api"
+	"github.com/fivemanage/lite/internal/http/validator"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/labstack/echo/v4"
 )
@@ -18,7 +19,7 @@ func (r *Server) authRouterGroup(group *echo.Group, authService *auth.Auth) {
 		ctx := context.Background()
 
 		var register api.RegisterRequest
-		if err := BindAndValidate(c, &register); err != nil {
+		if err := validator.BindAndValidate(c, &register); err != nil {
 			return err
 		}
 
@@ -61,7 +62,7 @@ func (r *Server) authRouterGroup(group *echo.Group, authService *auth.Auth) {
 		ctx := context.Background()
 
 		var login api.LoginRequest
-		if err := BindAndValidate(c, &login); err != nil {
+		if err := validator.BindAndValidate(c, &login); err != nil {
 			return err
 		}
 

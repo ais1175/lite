@@ -64,7 +64,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Fivemanage Lite (0.2.8)</SidebarGroupLabel>
+          <SidebarGroupLabel>Fivemanage Lite (dev)</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

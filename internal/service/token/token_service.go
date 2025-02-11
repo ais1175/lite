@@ -4,35 +4,41 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/crypt"
 	"github.com/fivemanage/lite/internal/database"
 	"github.com/uptrace/bun"
 )
 
-type Service struct{}
-
-func NewService(db *bun.DB) *Service {
-	return &Service{}
+type Service struct {
+	db *bun.DB
 }
 
-func (s *Service) CreateToken(ctx context.Context, identifier, tokenType string) error {
+func NewService(db *bun.DB) *Service {
+	return &Service{
+		db: db,
+	}
+}
+
+func (s *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest) (string, error) {
 	var err error
 
 	apiToken, err := crypt.GenerateApiKey()
 	if err != nil {
-		return err
+		return "", nil
 	}
 
 	tokenHash, err := crypt.HashPassword(apiToken)
 	if err != nil {
-		return err
+		return "", nil
 	}
 
 	token := &database.Token{
-		Identifier: identifier,
+		Identifier: data.Identifier,
 		TokenHash:  tokenHash,
 	}
 
 	fmt.Println(token)
-	return nil
+
+	return apiToken, nil
 }
