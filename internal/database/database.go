@@ -30,7 +30,7 @@ type Session struct {
 
 type Organization struct {
 	bun.BaseModel `bun:"table:organization"`
-	ID            string `bun:"id,pk"`
+	ID            int64  `bun:"id,pk,autoincrement"`
 	OwnerID       string `bun:"owner_Id"`
 	Name          string `bun:"name"`
 	User          *User  `bun:"rel:belongs-to,join:owner_id=id"`
@@ -46,7 +46,7 @@ type OrganizationMember struct {
 }
 
 type Token struct {
-	bun.BaseModel `bun:"table:file"`
+	bun.BaseModel `bun:"table:token"`
 	ID            int64  `bun:"id,pk,autoincrement"`
 	TokenHash     string `bun:"token_hash"`
 	Identifier    string `bun:"identifier"`
@@ -58,7 +58,8 @@ type File struct {
 	bun.BaseModel  `bun:"table:file"`
 	Key            string        `bun:"key"`
 	Size           int64         `bun:"size"`
-	OrganizationID int           `bun:"organization_id"`
+	Type           string        `bun:"type"`
+	OrganizationID int64         `bun:"organization_id"`
 	Organization   *Organization `bun:"rel:belongs-to,join:organization_id=id"`
 }
 
@@ -73,8 +74,8 @@ func New(driver string, dsn string) Store {
 	switch driver {
 	case "mysql":
 		return &MySQL{}
-	case "sqlite":
-		return &SQLite{}
+	case "pg", "postgresql":
+		return &PostgreSQL{}
 	default:
 		return nil
 	}

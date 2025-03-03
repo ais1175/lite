@@ -2,11 +2,11 @@ package token
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/crypt"
 	"github.com/fivemanage/lite/internal/database"
+	tokenquery "github.com/fivemanage/lite/internal/database/query/token"
 	"github.com/uptrace/bun"
 )
 
@@ -20,17 +20,17 @@ func NewService(db *bun.DB) *Service {
 	}
 }
 
-func (s *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest) (string, error) {
+func (r *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest) (string, error) {
 	var err error
 
 	apiToken, err := crypt.GenerateApiKey()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	tokenHash, err := crypt.HashPassword(apiToken)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	token := &database.Token{
@@ -38,7 +38,10 @@ func (s *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest)
 		TokenHash:  tokenHash,
 	}
 
-	fmt.Println(token)
+	err = tokenquery.Create(ctx, r.db, token)
+	if err != nil {
+		return "", err
+	}
 
 	return apiToken, nil
 }

@@ -7,6 +7,6 @@ import (
 )
 
 func Add(group *echo.Group, authservice *auth.Auth, tokenservice *token.Service) {
-	registerAuthApi(group)
+	registerAuthApi(group, authservice)
 	registerTokensApi(group, tokenservice)
 }

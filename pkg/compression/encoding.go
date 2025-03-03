@@ -1,4 +1,0 @@
-package compression
-
-func EncodeImage() {
-}

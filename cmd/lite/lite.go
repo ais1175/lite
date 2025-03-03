@@ -13,7 +13,9 @@ import (
 	"github.com/fivemanage/lite/internal/database"
 	"github.com/fivemanage/lite/internal/http"
 	"github.com/fivemanage/lite/internal/service/auth"
+	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/token"
+	"github.com/fivemanage/lite/internal/storage"
 	"github.com/fivemanage/lite/migrate"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -24,7 +26,7 @@ import (
 var (
 	rootCmd = &cobra.Command{
 		Use:   "fivemanage",
-		Short: "Open-source, easy-to-use file hosting service.",
+		Short: "Open-source, easy-to-use gaming-community management service.",
 	}
 
 	// todo: otel & prom
@@ -53,12 +55,16 @@ var (
 			// instead of raw dogging it in each service
 			store := db.Connect()
 
+			storageLayer := storage.New("s3")
+
 			authservice := auth.New(store)
 			tokenservice := token.NewService(store)
+			fileservice := file.NewService(store, storageLayer)
 
 			server := http.NewServer(
 				authservice,
 				tokenservice,
+				fileservice,
 			)
 
 			// todo: check if we have an admin user
@@ -71,7 +77,7 @@ var (
 
 			srv := &nethttp.Server{
 				Addr:    fmt.Sprintf("localhost:%d", port),
-				Handler: server.Engine,
+				Handler: server,
 			}
 
 			go func() {

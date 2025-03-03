@@ -14,20 +14,22 @@ import (
 
 func registerTokensApi(group *echo.Group, tokenService *token.Service) {
 	group.POST("/token", func(c echo.Context) error {
+		// this might not work well for telemetry
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
 
 		var data api.CreateTokenRequest
 		if err := validator.BindAndValidate(c, &data); err != nil {
 			logrus.WithError(err).Error("failed to bind and validate token")
-			return c.JSON(500, err)
+			return echo.NewHTTPError(500, err)
 		}
 
 		apiToken, err := tokenService.CreateToken(ctx, &data)
 		if err != nil {
-			return c.JSON(500, nil)
+			return echo.NewHTTPError(500, err)
 		}
 
+		// we return the apiToken as a one-time thing
 		tokenResponse := &api.CreateTokenResponse{
 			Token: apiToken,
 		}

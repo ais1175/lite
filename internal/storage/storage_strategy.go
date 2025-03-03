@@ -1,9 +1,14 @@
 package storage
 
-import "github.com/fivemanage/lite/internal/storage/s3"
+import (
+	"context"
+	"io"
+
+	"github.com/fivemanage/lite/internal/storage/s3"
+)
 
 type StorageLayer interface {
-	UploadFile() error
+	UploadFile(context.Context, io.Reader, string, string) error
 	DeleteFile() error
 }
 

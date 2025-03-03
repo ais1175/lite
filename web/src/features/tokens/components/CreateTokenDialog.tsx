@@ -16,7 +16,7 @@ import { type TokenParams, tokenSchema } from "@/typings/token";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useCreateToken } from "../api/useCreateToken";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { KeyRound } from "lucide-react";
@@ -26,7 +26,7 @@ export function CreateTokenDialog() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const { mutateAsync, data, isSuccess } = useCreateToken();
+  const { mutateAsync, reset, data, isSuccess } = useCreateToken();
   const form = useForm<TokenParams>({
     defaultValues: {
       type: "media",
@@ -39,6 +39,12 @@ export function CreateTokenDialog() {
       await mutateAsync(data);
     });
   }
+
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [open, reset]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -53,9 +59,7 @@ export function CreateTokenDialog() {
           <DialogTitle>Create token</DialogTitle>
         </DialogHeader>
         {isSuccess && data ? (
-          <div>
-            <Input defaultValue={data.token} />
-          </div>
+          <div className="border p-2">{data.token}</div>
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleOnSubmit)}>
@@ -74,7 +78,7 @@ export function CreateTokenDialog() {
                 />
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="mt-4">
                 <Button type="submit" disabled={isPending}>
                   Create
                 </Button>

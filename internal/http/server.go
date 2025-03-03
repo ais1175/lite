@@ -6,8 +6,10 @@ import (
 	"strings"
 
 	"github.com/fivemanage/lite/internal/http/internalapi"
+	"github.com/fivemanage/lite/internal/http/publicapi"
 	_validator "github.com/fivemanage/lite/internal/http/validator"
 	"github.com/fivemanage/lite/internal/service/auth"
+	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/labstack/echo/v4"
 
@@ -27,20 +29,23 @@ type Server struct {
 }
 
 // TODO: Add sentry for monitoring. There should be an opt-out option.
-func NewServer(authservice *auth.Auth, tokenservice *token.Service) *Server {
-	engine := echo.New()
-	srv := &Server{
-		Engine: engine,
-	}
+func NewServer(
+	authservice *auth.Auth,
+	tokenservice *token.Service,
+	fileservice *file.Service,
+) *echo.Echo {
+	app := echo.New()
 
-	srv.Engine.Validator = &_validator.CustomValidator{Validator: validator.New()}
+	// not good, not bad
+	app.Validator = &_validator.CustomValidator{Validator: validator.New()}
 
 	// TODO: lets use 'logrus' for logging
+	// BUT their buffering is uughhhh compared to zaplog
 
-	srv.Engine.Use(middleware.Logger())
-	srv.Engine.Use(middleware.Recover())
+	app.Use(middleware.Logger())
+	app.Use(middleware.Recover())
 
-	srv.Engine.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+	app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Root:       "web/dist",
 		Filesystem: nethttp.FS(webContent),
 		HTML5:      true,
@@ -49,16 +54,17 @@ func NewServer(authservice *auth.Auth, tokenservice *token.Service) *Server {
 		},
 	}))
 
-	apiGroup := srv.Engine.Group("/api")
+	apiGroup := app.Group("/api")
 
 	internalapi.Add(
+
 		apiGroup,
 		authservice,
 		tokenservice,
 	)
+	publicapi.Add(apiGroup, fileservice)
 
-	srv.authRouterGroup(apiGroup, authservice)
-	srv.imageRouterGroup(apiGroup)
+	// app.imageRouterGroup(apiGroup)
 
-	return srv
+	return app
 }
