@@ -2,6 +2,7 @@ package token
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/crypt"
@@ -44,4 +45,37 @@ func (r *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest)
 	}
 
 	return apiToken, nil
+}
+
+func (r *Service) ListTokens(ctx context.Context) ([]api.ListTokensResponse, error) {
+	var err error
+	var response []api.ListTokensResponse
+
+	tokens, err := tokenquery.List(ctx, r.db)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, token := range tokens {
+		response = append(response, api.ListTokensResponse{
+			ID:         token.ID,
+			Identifier: token.Identifier,
+		})
+	}
+
+	return response, nil
+}
+
+func (r *Service) DeleteToken(ctx context.Context, tokenID string) error {
+	var err error
+	iTokenID, err := strconv.ParseInt(tokenID, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	err = tokenquery.Delete(ctx, r.db, iTokenID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

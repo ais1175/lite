@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/uptrace/bun"
@@ -13,7 +14,7 @@ type MySQL struct{}
 func (r *MySQL) Connect() *bun.DB {
 	sqldb, err := sql.Open("mysql", "root:root@tcp(localhost)/fivemanage-lite-dev")
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to open mysql connection: %v", err)
 	}
 
 	return bun.NewDB(sqldb, mysqldialect.New())

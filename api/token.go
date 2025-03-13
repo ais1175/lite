@@ -8,3 +8,8 @@ type CreateTokenRequest struct {
 type CreateTokenResponse struct {
 	Token string `json:"token"`
 }
+
+type ListTokensResponse struct {
+	ID         int64  `json:"id"`
+	Identifier string `json:"identifier"`
+}

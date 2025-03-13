@@ -1,6 +1,7 @@
 package migrate
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/fivemanage/lite/migrate/migrations"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
 )
 
@@ -102,3 +104,20 @@ var (
 		},
 	}
 )
+
+func AutoMigrate(ctx context.Context, db *bun.DB) {
+	migrator := migrate.NewMigrator(db, migrations.Migrations)
+	if err := migrator.Lock(ctx); err != nil {
+		panic(err)
+	}
+	defer migrator.Unlock(ctx) //nolint:errcheck
+
+	group, err := migrator.Migrate(ctx)
+	if err != nil {
+		panic(err)
+	}
+	if group.IsZero() {
+		fmt.Printf("there are no new migrations to run (database is up to date)\n")
+	}
+	fmt.Printf("migrated to %s\n", group)
+}
