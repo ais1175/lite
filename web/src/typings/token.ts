@@ -10,3 +10,9 @@ export type TokenParams = z.infer<typeof tokenSchema>;
 export interface TokenPreview {
   token: string;
 }
+
+export interface Token {
+  id: number;
+  type: string;
+  identifier: string;
+}

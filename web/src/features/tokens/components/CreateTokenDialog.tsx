@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { KeyRound } from "lucide-react";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "@/typings/query";
 
 export function CreateTokenDialog() {
   const [open, setOpen] = useState(false);
@@ -34,9 +36,15 @@ export function CreateTokenDialog() {
     resolver: zodResolver(tokenSchema),
   });
 
+  const queryClient = useQueryClient();
+
   function handleOnSubmit(data: TokenParams) {
     startTransition(async () => {
       await mutateAsync(data);
+
+      startTransition(() => {
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.Tokens] });
+      });
     });
   }
 

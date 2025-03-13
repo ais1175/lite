@@ -36,4 +36,30 @@ func registerTokensApi(group *echo.Group, tokenService *token.Service) {
 
 		return c.JSON(200, httputil.Response(tokenResponse))
 	})
+
+	group.GET("/token", func(c echo.Context) error {
+		ctx := c.Request().Context()
+
+		tokens, err := tokenService.ListTokens(ctx)
+		if err != nil {
+			return echo.NewHTTPError(500, err)
+		}
+
+		return c.JSON(200, httputil.Response(tokens))
+	})
+
+	group.DELETE("/token/:id", func(c echo.Context) error {
+		var err error
+		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
+		defer cancel()
+
+		tokenID := c.Param("id")
+
+		err = tokenService.DeleteToken(ctx, tokenID)
+		if err != nil {
+			return echo.NewHTTPError(500, err)
+		}
+
+		return c.JSON(200, httputil.Response(nil))
+	})
 }

@@ -29,7 +29,7 @@ var (
 		Short: "Open-source, easy-to-use gaming-community management service.",
 	}
 
-	// todo: otel & prom
+	// todo: otel & promhttp
 
 	// this whole code can probably go into a 'run.go' file.
 	// just to not fill this file with shit
@@ -50,10 +50,8 @@ var (
 			}
 
 			db := database.New(driver, "")
-			// todo: handle connection error properly
-			// we'll probably create a secondary layer with db funcs
-			// instead of raw dogging it in each service
 			store := db.Connect()
+			migrate.AutoMigrate(cmd.Context(), store)
 
 			storageLayer := storage.New("s3")
 
