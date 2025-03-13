@@ -4,22 +4,25 @@ import { AuthRoute } from "./features/auth/routes/AuthRoute";
 import { AppDashboard } from "./features/app/routes/AppDashboard";
 import { AppLayout } from "./features/app/components/AppLayout";
 import { TokensRoute } from "./features/tokens/routes/TokensRoute";
+import { ThemeProvider } from "./components/theme/ThemeProvider";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/auth" element={<AuthRoute />} />
-          <Route path="/app" element={<AppLayout />}>
-            <Route index element={<AppDashboard />} />
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<AuthRoute />} />
+            <Route path="/app" element={<AppLayout />}>
+              <Route index element={<AppDashboard />} />
 
-            <Route path="tokens" element={<TokensRoute />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+              <Route path="tokens" element={<TokensRoute />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

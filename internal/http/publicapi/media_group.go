@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// DRY they said
 func registerMediaApi(group *echo.Group, fileService *file.Service) {
 	group.POST("/image", func(c echo.Context) error {
 		var err error
@@ -21,6 +22,44 @@ func registerMediaApi(group *echo.Group, fileService *file.Service) {
 		}
 
 		err = fileService.CreateFile(ctx, "image", file, header)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+
+		return c.JSON(200, nil)
+	})
+
+	group.POST("/video", func(c echo.Context) error {
+		var err error
+		ctx := c.Request().Context()
+
+		file, header, err := httputil.File(c.Request(), "image")
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": err.Error(),
+			})
+		}
+
+		err = fileService.CreateFile(ctx, "video", file, header)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+
+		return c.JSON(200, nil)
+	})
+
+	group.POST("/audio", func(c echo.Context) error {
+		var err error
+		ctx := c.Request().Context()
+
+		file, header, err := httputil.File(c.Request(), "image")
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": err.Error(),
+			})
+		}
+
+		err = fileService.CreateFile(ctx, "audio", file, header)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}

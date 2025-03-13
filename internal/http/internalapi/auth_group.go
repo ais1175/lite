@@ -25,7 +25,11 @@ func registerAuthApi(group *echo.Group, authservice *auth.Auth) {
 			if errors.Is(err, auth.ErrSessionExpired{}) {
 				return c.Redirect(http.StatusUnauthorized, "/auth")
 			}
-			return c.JSON(http.StatusForbidden, "failed to find session cookie")
+
+			return c.JSON(http.StatusForbidden, echo.Map{
+				"status":  "error",
+				"message": err.Error(),
+			})
 		}
 
 		return c.JSON(http.StatusOK, echo.Map{

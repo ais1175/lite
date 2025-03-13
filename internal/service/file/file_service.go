@@ -50,7 +50,10 @@ func (s *Service) CreateFile(
 
 	err = s.storage.UploadFile(ctx, file, key, contentType)
 	if err != nil {
-		tx.Rollback()
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+
 		return err
 	}
 

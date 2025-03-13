@@ -242,7 +242,6 @@ func (a *Auth) UserBySession(ctx context.Context, sessionID string) (*api.User, 
 	session := new(database.Session)
 	err := a.db.NewSelect().Model(session).Relation("User").Where("session.id = ?", sessionID).Limit(1).Scan(ctx)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 

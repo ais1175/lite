@@ -46,6 +46,7 @@ func (s *Storage) UploadFile(ctx context.Context, file io.Reader, key, contenTyp
 		Body:        file,
 		ContentType: aws.String(contenType),
 	})
+
 	return nil
 }
 

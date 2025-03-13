@@ -16,7 +16,7 @@ import { type TokenParams, tokenSchema } from "@/typings/token";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useCreateToken } from "../api/useCreateToken";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { KeyRound } from "lucide-react";
@@ -40,11 +40,10 @@ export function CreateTokenDialog() {
     });
   }
 
-  useEffect(() => {
-    return () => {
-      reset();
-    };
-  }, [open, reset]);
+  function resetForm() {
+    form.reset();
+    reset();
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -54,7 +53,11 @@ export function CreateTokenDialog() {
           Create token
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent
+        id="create-token-dialog"
+        onAnimationEnd={resetForm}
+        aria-description="Create a new token"
+      >
         <DialogHeader>
           <DialogTitle>Create token</DialogTitle>
         </DialogHeader>
@@ -71,7 +74,7 @@ export function CreateTokenDialog() {
                     <FormItem>
                       <FormLabel>Identifier</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} type="text" />
                       </FormControl>
                     </FormItem>
                   )}

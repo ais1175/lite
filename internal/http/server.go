@@ -38,11 +38,6 @@ func NewServer(
 
 	// not good, not bad
 	app.Validator = &_validator.CustomValidator{Validator: validator.New()}
-
-	// TODO: lets use 'logrus' for logging
-	// BUT their buffering is uughhhh compared to zaplog
-
-	app.Use(middleware.Logger())
 	app.Use(middleware.Recover())
 
 	app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
@@ -57,7 +52,6 @@ func NewServer(
 	apiGroup := app.Group("/api")
 
 	internalapi.Add(
-
 		apiGroup,
 		authservice,
 		tokenservice,
