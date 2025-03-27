@@ -10,10 +10,7 @@ import (
 
 type PostgreSQL struct{}
 
-func (r *PostgreSQL) Connect() *bun.DB {
-	dsn := "postgres://postgres:@localhost:5432/test?sslmode=disable"
-	// dsn := "unix://user:pass@dbname/var/run/postgresql/.s.PGSQL.5432"
+func (r *PostgreSQL) Connect(dsn string) *bun.DB {
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
-
 	return bun.NewDB(sqldb, pgdialect.New())
 }

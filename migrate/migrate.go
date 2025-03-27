@@ -24,7 +24,8 @@ var (
 		Short: "Create migration tables",
 		Run: func(cmd *cobra.Command, args []string) {
 			driver := viper.GetString("driver")
-			db := database.New(driver, "").Connect()
+			dsn := viper.GetString("dsn")
+			db := database.New(driver).Connect(dsn)
 
 			migrator := migrate.NewMigrator(db, migrations.Migrations)
 			err := migrator.Init(cmd.Context())
@@ -39,7 +40,9 @@ var (
 		Short: "Migrate database",
 		Run: func(cmd *cobra.Command, args []string) {
 			driver := viper.GetString("driver")
-			db := database.New(driver, "").Connect()
+			dsn := viper.GetString("dsn")
+
+			db := database.New(driver).Connect(dsn)
 
 			migrator := migrate.NewMigrator(db, migrations.Migrations)
 			if err := migrator.Lock(cmd.Context()); err != nil {
@@ -62,7 +65,8 @@ var (
 		Use: "unlock",
 		Run: func(cmd *cobra.Command, args []string) {
 			driver := viper.GetString("driver")
-			db := database.New(driver, "").Connect()
+			dsn := viper.GetString("dsn")
+			db := database.New(driver).Connect(dsn)
 
 			migrator := migrate.NewMigrator(db, migrations.Migrations)
 			err := migrator.Unlock(cmd.Context())
@@ -76,7 +80,8 @@ var (
 		Use: "lock",
 		Run: func(cmd *cobra.Command, args []string) {
 			driver := viper.GetString("driver")
-			db := database.New(driver, "").Connect()
+			dsn := viper.GetString("dsn")
+			db := database.New(driver).Connect(dsn)
 
 			migrator := migrate.NewMigrator(db, migrations.Migrations)
 			err := migrator.Lock(cmd.Context())
@@ -91,7 +96,8 @@ var (
 		Short: "Create database migration",
 		Run: func(cmd *cobra.Command, args []string) {
 			driver := viper.GetString("driver")
-			db := database.New(driver, "").Connect()
+			dsn := viper.GetString("dsn")
+			db := database.New(driver).Connect(dsn)
 
 			migrator := migrate.NewMigrator(db, migrations.Migrations)
 

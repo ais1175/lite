@@ -64,11 +64,11 @@ type File struct {
 }
 
 type Store interface {
-	Connect() *bun.DB
+	Connect(dsn string) *bun.DB
 }
 
 // TODO: Return error if driver is not supported
-func New(driver string, dsn string) Store {
+func New(driver string) Store {
 	switch driver {
 	case "mysql":
 		return &MySQL{}

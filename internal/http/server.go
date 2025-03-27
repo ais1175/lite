@@ -2,7 +2,9 @@ package http
 
 import (
 	"embed"
-	nethttp "net/http"
+	"fmt"
+	"io/fs"
+	"net/http"
 	"strings"
 
 	"github.com/fivemanage/lite/internal/http/internalapi"
@@ -17,11 +19,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-// This embed shit shouldn't be this far away.
-// When we are ready, we can either build the React code directly into the server or root folder
-// or just copy it in the Dockerfile.
-
-// go:embed ../../../web/dist
+//go:embed dist/*
 var webContent embed.FS
 
 type Server struct {
@@ -35,17 +33,18 @@ func NewServer(
 	fileservice *file.Service,
 ) *echo.Echo {
 	app := echo.New()
+	app.Debug = true
 
 	// not good, not bad
 	app.Validator = &_validator.CustomValidator{Validator: validator.New()}
 	app.Use(middleware.Recover())
+	app.Use(middleware.Logger())
 
 	app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-		Root:       "web/dist",
-		Filesystem: nethttp.FS(webContent),
+		Filesystem: getFileSystem("dist"),
 		HTML5:      true,
 		Skipper: func(c echo.Context) bool {
-			return strings.HasPrefix(c.Request().URL.Path, "/api")
+			return strings.HasPrefix(c.Path(), "/api")
 		},
 	}))
 
@@ -58,7 +57,16 @@ func NewServer(
 	)
 	publicapi.Add(apiGroup, fileservice)
 
-	// app.imageRouterGroup(apiGroup)
-
 	return app
+}
+
+func getFileSystem(path string) http.FileSystem {
+	fs, err := fs.Sub(webContent, path)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Serving static files from", path)
+
+	return http.FS(fs)
 }

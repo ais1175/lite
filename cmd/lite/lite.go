@@ -23,95 +23,87 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	rootCmd = &cobra.Command{
-		Use:   "fivemanage",
-		Short: "Open-source, easy-to-use gaming-community management service.",
-	}
+var rootCmd = &cobra.Command{
+	Use:   "fivemanage",
+	Short: "Open-source, easy-to-use gaming-community management service.",
+	Run: func(cmd *cobra.Command, args []string) {
+		var err error
 
-	// todo: otel & promhttp
+		port := viper.GetInt("port")
+		driver := viper.GetString("driver")
+		dsn := viper.GetString("dsn")
 
-	// this whole code can probably go into a 'run.go' file.
-	// just to not fill this file with shit
-	// its gonna be ugly anyways tho
-	runCmd = &cobra.Command{
-		Use:   "run",
-		Short: "Run fivemanage application",
-		Run: func(cmd *cobra.Command, args []string) {
-			var err error
+		err = godotenv.Load()
+		// TODO: Only for development
+		if err != nil {
+			log.Println("Error loading .env file. Probably becasue we're in production")
+		}
 
-			port := viper.GetInt("port")
-			driver := viper.GetString("driver")
+		db := database.New(driver)
+		store := db.Connect(dsn)
+		migrate.AutoMigrate(cmd.Context(), store)
 
-			err = godotenv.Load()
-			// TODO: Only for development
-			if err != nil {
-				log.Fatal("Error loading .env file. Probably becasue we're in production")
+		storageLayer := storage.New("s3")
+
+		authservice := auth.New(store)
+		tokenservice := token.NewService(store)
+		fileservice := file.NewService(store, storageLayer)
+
+		server := http.NewServer(
+			authservice,
+			tokenservice,
+			fileservice,
+		)
+
+		// todo: check if we have an admin user
+		// if not, create an admin user with the ADMIN_PASSWORD ENV
+		err = authservice.CreateAdminUser()
+		if err != nil {
+			logrus.WithError(err).Error("Failed to create admin user")
+			return
+		}
+
+		srv := &nethttp.Server{
+			Addr:    fmt.Sprintf(":%d", port),
+			Handler: server,
+		}
+
+		go func() {
+			fmt.Printf("Server is running on port %d...\n", port)
+			if err := srv.ListenAndServe(); err != nil && err != nethttp.ErrServerClosed {
+				log.Fatalf("listen: %s\n", err)
 			}
+		}()
 
-			db := database.New(driver, "")
-			store := db.Connect()
-			migrate.AutoMigrate(cmd.Context(), store)
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		<-quit
+		log.Println("Shutdown Server ...")
 
-			storageLayer := storage.New("s3")
-
-			authservice := auth.New(store)
-			tokenservice := token.NewService(store)
-			fileservice := file.NewService(store, storageLayer)
-
-			server := http.NewServer(
-				authservice,
-				tokenservice,
-				fileservice,
-			)
-
-			// todo: check if we have an admin user
-			// if not, create an admin user with the ADMIN_PASSWORD ENV
-			err = authservice.CreateAdminUser()
-			if err != nil {
-				logrus.WithError(err).Error("Failed to create admin user")
-				return
-			}
-
-			srv := &nethttp.Server{
-				Addr:    fmt.Sprintf("localhost:%d", port),
-				Handler: server,
-			}
-
-			go func() {
-				fmt.Printf("Server is running on port %d...\n", port)
-				if err := srv.ListenAndServe(); err != nil && err != nethttp.ErrServerClosed {
-					log.Fatalf("listen: %s\n", err)
-				}
-			}()
-
-			quit := make(chan os.Signal, 1)
-			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-			<-quit
-			log.Println("Shutdown Server ...")
-
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-			if err := srv.Shutdown(ctx); err != nil {
-				log.Fatal("Server Shutdown:", err)
-			}
-			select {
-			case <-ctx.Done():
-				log.Println("timeout of 5 seconds.")
-			}
-			log.Println("Server exiting")
-		},
-	}
-)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Fatal("Server Shutdown:", err)
+		}
+		select {
+		case <-ctx.Done():
+			log.Println("timeout of 5 seconds.")
+		}
+		log.Println("Server exiting")
+	},
+}
 
 func init() {
 	rootCmd.PersistentFlags().String("driver", "mysql", "Database driver")
-	runCmd.Flags().Int("port", 8080, "Port to serve Fivemanage")
+	rootCmd.Flags().Int("port", 8080, "Port to serve Fivemanage")
+	rootCmd.Flags().String("dsn", "", "Database DSN")
 
 	viper.BindPFlag("driver", rootCmd.PersistentFlags().Lookup("driver"))
-	viper.BindPFlag("port", runCmd.Flags().Lookup("port"))
-
-	rootCmd.AddCommand(runCmd)
+	viper.BindPFlag("port", rootCmd.Flags().Lookup("port"))
+	viper.BindPFlag("dsn", rootCmd.Flags().Lookup("dsn"))
+	viper.BindEnv("driver", "DB_DRIVER")
+	viper.BindEnv("port", "PORT")
+	viper.BindEnv("dsn", "DSN")
 
 	rootCmd.AddCommand(migrate.RootCmd)
 	migrate.RootCmd.AddCommand(
