@@ -1,3 +1,7 @@
+prerelease-identifier: 'beta'
+prerelease: true
+publish: true
+
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 template: |
@@ -8,5 +12,4 @@ template: |
   **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
 
 
-prerelease-identifier: 'beta'
-publish: true
+
