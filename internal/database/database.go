@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -28,17 +27,18 @@ type Session struct {
 	User          *User     `bun:"rel:belongs-to,join:user_id=id"`
 }
 
+// not used yet
 type Organization struct {
 	bun.BaseModel `bun:"table:organization"`
 	ID            int64  `bun:"id,pk,autoincrement"`
-	OwnerID       string `bun:"owner_Id"`
 	Name          string `bun:"name"`
-	User          *User  `bun:"rel:belongs-to,join:owner_id=id"`
 }
 
+// not used yet
 type OrganizationMember struct {
 	bun.BaseModel  `bun:"table:organization_member"`
 	ID             int64         `bun:"id,pk,autoincrement"`
+	Role           string        `bun:"role"`
 	UserID         int           `bun:"user_id"`
 	OrganizationID int           `bun:"organization_id"`
 	User           *User         `bun:"rel:belongs-to,join:user_id=id"`
@@ -69,8 +69,6 @@ type Store interface {
 
 // TODO: Return error if driver is not supported
 func New(driver string, dsn string) Store {
-	fmt.Println("option", driver)
-
 	switch driver {
 	case "mysql":
 		return &MySQL{}

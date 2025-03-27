@@ -5,6 +5,7 @@ import { AppDashboard } from "./features/app/routes/AppDashboard";
 import { AppLayout } from "./features/app/components/AppLayout";
 import { TokensRoute } from "./features/tokens/routes/TokensRoute";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
+import { ProtectedRoute } from "./features/auth/routes/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -15,10 +16,14 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthRoute />} />
-            <Route path="/app" element={<AppLayout />}>
-              <Route index element={<AppDashboard />} />
+            // authed routes
+            <Route path="/" element={<ProtectedRoute />}>
+              <Route path="new-workspace" element={<div>New Workspace</div>} />
+              <Route path="app/:organizationId" element={<AppLayout />}>
+                <Route index element={<AppDashboard />} />
 
-              <Route path="tokens" element={<TokensRoute />} />
+                <Route path="tokens" element={<TokensRoute />} />
+              </Route>
             </Route>
           </Routes>
         </BrowserRouter>
