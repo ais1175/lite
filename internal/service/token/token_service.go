@@ -47,9 +47,9 @@ func (r *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest)
 	return apiToken, nil
 }
 
-func (r *Service) ListTokens(ctx context.Context) ([]api.ListTokensResponse, error) {
+func (r *Service) ListTokens(ctx context.Context) ([]*api.ListTokensResponse, error) {
 	var err error
-	var response []api.ListTokensResponse
+	var response []*api.ListTokensResponse
 
 	tokens, err := tokenquery.List(ctx, r.db)
 	if err != nil {
@@ -57,7 +57,7 @@ func (r *Service) ListTokens(ctx context.Context) ([]api.ListTokensResponse, err
 	}
 
 	for _, token := range tokens {
-		response = append(response, api.ListTokensResponse{
+		response = append(response, &api.ListTokensResponse{
 			ID:         token.ID,
 			Identifier: token.Identifier,
 		})
