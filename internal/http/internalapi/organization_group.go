@@ -2,6 +2,7 @@ package internalapi
 
 import (
 	"github.com/fivemanage/lite/api"
+	"github.com/fivemanage/lite/internal/http/httputil"
 	"github.com/fivemanage/lite/internal/service/organization"
 	"github.com/labstack/echo/v4"
 )
@@ -27,6 +28,6 @@ func registerOrganizationApi(group *echo.Group, organizationService *organizatio
 			return echo.NewHTTPError(500, err)
 		}
 
-		return c.JSON(200, organizations)
+		return c.JSON(200, httputil.Response(organizations))
 	})
 }

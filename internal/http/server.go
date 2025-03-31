@@ -12,6 +12,7 @@ import (
 	_validator "github.com/fivemanage/lite/internal/http/validator"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/fivemanage/lite/internal/service/file"
+	"github.com/fivemanage/lite/internal/service/organization"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/labstack/echo/v4"
 
@@ -31,6 +32,7 @@ func NewServer(
 	authservice *auth.Auth,
 	tokenservice *token.Service,
 	fileservice *file.Service,
+	organizationService *organization.Service,
 ) *echo.Echo {
 	app := echo.New()
 	app.Debug = true
@@ -44,7 +46,7 @@ func NewServer(
 		Filesystem: getFileSystem("dist"),
 		HTML5:      true,
 		Skipper: func(c echo.Context) bool {
-			return strings.HasPrefix(c.Path(), "/api")
+			return strings.HasPrefix(c.Request().URL.Path, "/api")
 		},
 	}))
 
@@ -54,6 +56,7 @@ func NewServer(
 		apiGroup,
 		authservice,
 		tokenservice,
+		organizationService,
 	)
 	publicapi.Add(apiGroup, fileservice)
 

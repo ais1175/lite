@@ -1,21 +1,20 @@
-import { Outlet, useLocation, Navigate, useParams } from "react-router";
+import { useOrganizations } from "@/features/organizations/api/useOrganizations";
+import { Outlet, Navigate, useParams } from "react-router";
 
 type AppParams = {
   organizationId: string;
 };
 
 export const ProtectedRoute: React.FC = () => {
-  const location = useLocation();
   const params = useParams<AppParams>();
 
-  if (location.pathname === "/") {
-    return <Navigate to="/workspaces" />;
+  const { data: organizations } = useOrganizations();
+  if (organizations && organizations.length === 0) {
+    return <Navigate to="/app/new-organization" />;
   }
 
-  console.log(params.organizationId);
-
   if (!params.organizationId) {
-    return <Navigate to="/app/123" />;
+    return <Navigate to="/app" />;
   }
 
   return <Outlet />;

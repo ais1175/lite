@@ -27,12 +27,13 @@ func NewService(db *bun.DB, storageLayer storage.StorageLayer) *Service {
 
 func (s *Service) CreateFile(
 	ctx context.Context,
+	organizationID string,
 	fileType string,
 	file multipart.File,
 	fileHeader *multipart.FileHeader,
 ) error {
 	var err error
-	key, contentType, err := generateFileKey(fileType, file, fileHeader)
+	key, contentType, err := generateFileKey(organizationID, fileType, file, fileHeader)
 	if err != nil {
 		return err
 	}
@@ -60,7 +61,7 @@ func (s *Service) CreateFile(
 	return nil
 }
 
-func generateFileKey(fileType string, file multipart.File, fileHeader *multipart.FileHeader) (string, string, error) {
+func generateFileKey(organizationID, fileType string, file multipart.File, fileHeader *multipart.FileHeader) (string, string, error) {
 	filename, err := crypt.GenerateFilename()
 	if err != nil {
 		return "", "", err
@@ -73,7 +74,7 @@ func generateFileKey(fileType string, file multipart.File, fileHeader *multipart
 	}
 
 	mime := mimetype.Detect(buf)
-	key := fmt.Sprintf("%s/%s.%s", fileType, filename, mime.Extension())
+	key := fmt.Sprintf("%s/%s.%s", organizationID, filename, mime.Extension())
 
 	return key, mime.String(), nil
 }

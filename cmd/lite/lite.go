@@ -14,6 +14,7 @@ import (
 	"github.com/fivemanage/lite/internal/http"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/fivemanage/lite/internal/service/file"
+	"github.com/fivemanage/lite/internal/service/organization"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/internal/storage"
 	"github.com/fivemanage/lite/migrate"
@@ -33,11 +34,7 @@ var rootCmd = &cobra.Command{
 		driver := viper.GetString("driver")
 		dsn := viper.GetString("dsn")
 
-		err = godotenv.Load()
-		// TODO: Only for development
-		if err != nil {
-			log.Println("Error loading .env file. Probably becasue we're in production")
-		}
+		fmt.Println("Starting Fivemanage...")
 
 		db := database.New(driver)
 		store := db.Connect(dsn)
@@ -48,11 +45,13 @@ var rootCmd = &cobra.Command{
 		authservice := auth.New(store)
 		tokenservice := token.NewService(store)
 		fileservice := file.NewService(store, storageLayer)
+		organizationservice := organization.NewService(store)
 
 		server := http.NewServer(
 			authservice,
 			tokenservice,
 			fileservice,
+			organizationservice,
 		)
 
 		// todo: check if we have an admin user
@@ -94,6 +93,12 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	err := godotenv.Load()
+	// TODO: Only for development
+	if err != nil {
+		log.Println("Error loading .env file. Probably becasue we're in production")
+	}
+
 	rootCmd.PersistentFlags().String("driver", "mysql", "Database driver")
 	rootCmd.Flags().Int("port", 8080, "Port to serve Fivemanage")
 	rootCmd.Flags().String("dsn", "", "Database DSN")

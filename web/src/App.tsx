@@ -6,6 +6,7 @@ import { AppLayout } from "./features/app/components/AppLayout";
 import { TokensRoute } from "./features/tokens/routes/TokensRoute";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { ProtectedRoute } from "./features/auth/routes/ProtectedRoute";
+import { NewOrganizationRoute } from "./features/organizations/routes/NewOrganizationRoute";
 
 const queryClient = new QueryClient();
 
@@ -15,14 +16,18 @@ function App() {
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="*" element={<div>404</div>} />
             <Route path="/auth" element={<AuthRoute />} />
-            // authed routes
-            <Route path="/" element={<ProtectedRoute />}>
-              <Route path="new-workspace" element={<div>New Workspace</div>} />
-              <Route path="app/:organizationId" element={<AppLayout />}>
-                <Route index element={<AppDashboard />} />
-
-                <Route path="tokens" element={<TokensRoute />} />
+            <Route path="/app">
+              <Route
+                path="new-organization"
+                element={<NewOrganizationRoute />}
+              />
+              <Route element={<ProtectedRoute />}>
+                <Route path=":organizationId" element={<AppLayout />}>
+                  <Route index element={<AppDashboard />} />
+                  <Route path="tokens" element={<TokensRoute />} />
+                </Route>
               </Route>
             </Route>
           </Routes>

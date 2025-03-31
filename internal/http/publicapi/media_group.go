@@ -21,7 +21,7 @@ func registerMediaApi(group *echo.Group, fileService *file.Service) {
 			})
 		}
 
-		err = fileService.CreateFile(ctx, "image", file, header)
+		err = fileService.CreateFile(ctx, "", "image", file, header)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
@@ -33,14 +33,14 @@ func registerMediaApi(group *echo.Group, fileService *file.Service) {
 		var err error
 		ctx := c.Request().Context()
 
-		file, header, err := httputil.File(c.Request(), "image")
+		file, header, err := httputil.File(c.Request(), "video")
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, echo.Map{
 				"error": err.Error(),
 			})
 		}
 
-		err = fileService.CreateFile(ctx, "video", file, header)
+		err = fileService.CreateFile(ctx, "", "video", file, header)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
@@ -52,14 +52,14 @@ func registerMediaApi(group *echo.Group, fileService *file.Service) {
 		var err error
 		ctx := c.Request().Context()
 
-		file, header, err := httputil.File(c.Request(), "image")
+		file, header, err := httputil.File(c.Request(), "audio")
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, echo.Map{
 				"error": err.Error(),
 			})
 		}
 
-		err = fileService.CreateFile(ctx, "audio", file, header)
+		err = fileService.CreateFile(ctx, "", "audio", file, header)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
