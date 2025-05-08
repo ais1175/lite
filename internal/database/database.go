@@ -52,8 +52,8 @@ type Token struct {
 	User          *User  `bun:"rel:belongs-to,join:user_id=id"`
 }
 
-type File struct {
-	bun.BaseModel  `bun:"table:file"`
+type Asset struct {
+	bun.BaseModel  `bun:"table:asset"`
 	Key            string        `bun:"key"`
 	Size           int64         `bun:"size"`
 	Type           string        `bun:"type"`

@@ -111,6 +111,13 @@ var (
 	}
 )
 
+func InitMigration(ctx context.Context, db *bun.DB) {
+	migrator := migrate.NewMigrator(db, migrations.Migrations)
+	if err := migrator.Init(ctx); err != nil {
+		panic(err)
+	}
+}
+
 func AutoMigrate(ctx context.Context, db *bun.DB) {
 	migrator := migrate.NewMigrator(db, migrations.Migrations)
 	if err := migrator.Lock(ctx); err != nil {

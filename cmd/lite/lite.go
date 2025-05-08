@@ -38,6 +38,8 @@ var rootCmd = &cobra.Command{
 
 		db := database.New(driver)
 		store := db.Connect(dsn)
+
+		migrate.InitMigration(cmd.Context(), store)
 		migrate.AutoMigrate(cmd.Context(), store)
 
 		storageLayer := storage.New("s3")

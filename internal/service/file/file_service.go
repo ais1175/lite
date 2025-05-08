@@ -38,7 +38,7 @@ func (s *Service) CreateFile(
 		return err
 	}
 
-	dbFile := &database.File{
+	dbFile := &database.Asset{
 		Type: fileType,
 		Size: fileHeader.Size,
 		Key:  key,

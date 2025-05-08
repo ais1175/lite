@@ -7,7 +7,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-func Create(ctx context.Context, db *bun.DB, file *database.File) (bun.Tx, error) {
+func Create(ctx context.Context, db *bun.DB, file *database.Asset) (bun.Tx, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	_, err = tx.NewInsert().Model(file).Exec(ctx)
 	if err != nil {
