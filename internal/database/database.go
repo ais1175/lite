@@ -27,20 +27,18 @@ type Session struct {
 	User          *User     `bun:"rel:belongs-to,join:user_id=id"`
 }
 
-// not used yet
 type Organization struct {
 	bun.BaseModel `bun:"table:organization"`
 	ID            int64  `bun:"id,pk,autoincrement"`
 	Name          string `bun:"name"`
 }
 
-// not used yet
 type OrganizationMember struct {
 	bun.BaseModel  `bun:"table:organization_member"`
 	ID             int64         `bun:"id,pk,autoincrement"`
 	Role           string        `bun:"role"`
-	UserID         int           `bun:"user_id"`
-	OrganizationID int           `bun:"organization_id"`
+	UserID         int64         `bun:"user_id"`
+	OrganizationID int64         `bun:"organization_id"`
 	User           *User         `bun:"rel:belongs-to,join:user_id=id"`
 	Organization   *Organization `bun:"rel:belongs-to,join:organization_id=id"`
 }

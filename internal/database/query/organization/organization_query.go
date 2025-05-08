@@ -9,6 +9,10 @@ import (
 
 func Create(ctx context.Context, db *bun.DB, organization *database.Organization) (bun.Tx, error) {
 	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return tx, err
+	}
+
 	_, err = tx.NewInsert().Model(organization).Exec(ctx)
 	if err != nil {
 		return tx, err
@@ -36,4 +40,18 @@ func List(ctx context.Context, db *bun.DB) ([]database.Organization, error) {
 	}
 
 	return organizations, nil
+}
+
+func CreateMember(ctx context.Context, db *bun.DB, member *database.OrganizationMember) (bun.Tx, error) {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return tx, err
+	}
+
+	_, err = tx.NewInsert().Model(member).Exec(ctx)
+	if err != nil {
+		return tx, err
+	}
+
+	return tx, nil
 }

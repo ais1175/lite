@@ -40,17 +40,24 @@ func New() *Storage {
 
 // UploadFile will both upload and replace as long as the key is the same
 func (s *Storage) UploadFile(ctx context.Context, file io.Reader, key, contenType string) error {
-	s.client.PutObject(ctx, &s3.PutObjectInput{
+	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(os.Getenv("AWS_BUCKET")),
 		Key:         aws.String(key),
 		Body:        file,
 		ContentType: aws.String(contenType),
 	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (s *Storage) DeleteFile() error {
-	s.client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{})
+	_, err := s.client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

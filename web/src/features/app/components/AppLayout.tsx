@@ -19,7 +19,6 @@ import { ModeToggle } from "@/components/theme/ModeToggle";
 export function AppLayout() {
   const location = useLocation();
   const paths = location.pathname.split("/").filter((p) => p);
-  console.log(paths);
 
   return (
     <SidebarProvider>
@@ -33,7 +32,7 @@ export function AppLayout() {
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink asChild>
-                    <Link to="/app">{paths[0]}</Link>
+                    <Link to="/app">some dropdown</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />

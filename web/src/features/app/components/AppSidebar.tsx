@@ -18,18 +18,19 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/Sidebar";
+import { NavLink } from "react-router";
 
 // Menu items.
 const items = [
   {
     title: "Files",
-    url: "/app/files",
+    url: "files",
     icon: Folders,
     comingSoon: false,
   },
   {
     title: "Tokens",
-    url: "/app/tokens",
+    url: "tokens",
     icon: KeyRound,
     comingSoon: false,
   },
@@ -70,10 +71,10 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <NavLink to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </NavLink>
                   </SidebarMenuButton>
                   {item.comingSoon && (
                     <SidebarMenuBadge>Coming soon</SidebarMenuBadge>

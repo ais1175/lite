@@ -1,12 +1,14 @@
+import { lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { AuthRoute } from "./features/auth/routes/AuthRoute";
 import { AppDashboard } from "./features/app/routes/AppDashboard";
 import { AppLayout } from "./features/app/components/AppLayout";
-import { TokensRoute } from "./features/tokens/routes/TokensRoute";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { ProtectedRoute } from "./features/auth/routes/ProtectedRoute";
 import { NewOrganizationRoute } from "./features/organizations/routes/NewOrganizationRoute";
+import { OrganizationSelectRoute } from "./features/organizations/routes/OrganizationSelectRoute";
+const TokensRoute = lazy(() => import("./features/tokens/routes/TokensRoute"));
 
 const queryClient = new QueryClient();
 
@@ -19,6 +21,7 @@ function App() {
             <Route path="*" element={<div>404</div>} />
             <Route path="/auth" element={<AuthRoute />} />
             <Route path="/app">
+              <Route index element={<OrganizationSelectRoute />} />
               <Route
                 path="new-organization"
                 element={<NewOrganizationRoute />}
@@ -26,6 +29,7 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route path=":organizationId" element={<AppLayout />}>
                   <Route index element={<AppDashboard />} />
+                  {/* Should probably wrap a suspense around this */}
                   <Route path="tokens" element={<TokensRoute />} />
                 </Route>
               </Route>

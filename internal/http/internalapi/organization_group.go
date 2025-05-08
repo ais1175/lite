@@ -2,6 +2,7 @@ package internalapi
 
 import (
 	"github.com/fivemanage/lite/api"
+	"github.com/fivemanage/lite/internal/auth"
 	"github.com/fivemanage/lite/internal/http/httputil"
 	"github.com/fivemanage/lite/internal/service/organization"
 	"github.com/labstack/echo/v4"
@@ -14,7 +15,12 @@ func registerOrganizationApi(group *echo.Group, organizationService *organizatio
 			return echo.NewHTTPError(400, err)
 		}
 
-		organization, err := organizationService.CreateOrganization(c.Request().Context(), &data)
+		currentUser, err := auth.CurrentUser(c)
+		if err != nil {
+			return echo.NewHTTPError(401, err)
+		}
+
+		organization, err := organizationService.CreateOrganization(c.Request().Context(), &data, currentUser.ID)
 		if err != nil {
 			return echo.NewHTTPError(500, err)
 		}

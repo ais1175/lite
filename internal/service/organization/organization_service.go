@@ -19,13 +19,32 @@ func NewService(db *bun.DB) *Service {
 	}
 }
 
-func (r *Service) CreateOrganization(ctx context.Context, data *api.CreateOrganizationRequest) (*api.Organization, error) {
+func (r *Service) CreateOrganization(ctx context.Context, data *api.CreateOrganizationRequest, userID int64) (*api.Organization, error) {
 	dbOrganization := &database.Organization{
 		Name: data.Name,
 	}
 
-	_, err := organizationquery.Create(ctx, r.db, dbOrganization)
+	orgTx, err := organizationquery.Create(ctx, r.db, dbOrganization)
 	if err != nil {
+		return nil, err
+	}
+	if err := orgTx.Commit(); err != nil {
+		return nil, err
+	}
+
+	memberTx, err := organizationquery.CreateMember(ctx, r.db, &database.OrganizationMember{
+		Role:           "ADMIN",
+		OrganizationID: dbOrganization.ID,
+		UserID:         userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := memberTx.Commit(); err != nil {
+		if err := orgTx.Rollback(); err != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 
