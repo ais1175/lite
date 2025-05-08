@@ -4,10 +4,10 @@ import { fetchApi } from "@/utils/http-util";
 import { useQuery } from "@tanstack/react-query";
 
 export function useSession() {
-  const { data } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: [QueryKeys.Session],
     queryFn: () => fetchApi<Session>("/api/auth/session"),
   });
 
-  return data;
+  return { data, isPending };
 }

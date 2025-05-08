@@ -36,4 +36,14 @@ func registerOrganizationApi(group *echo.Group, organizationService *organizatio
 
 		return c.JSON(200, httputil.Response(organizations))
 	})
+
+	group.GET("/organization/:id", func(c echo.Context) error {
+		id := c.Param("id")
+		organization, err := organizationService.FindOrganizationByID(c.Request().Context(), id)
+		if err != nil {
+			return echo.NewHTTPError(500, err)
+		}
+
+		return c.JSON(200, httputil.Response(organization))
+	})
 }

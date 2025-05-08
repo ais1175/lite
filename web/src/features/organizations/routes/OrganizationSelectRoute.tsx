@@ -1,12 +1,24 @@
-import { NavLink } from "react-router";
+import { Navigate, NavLink } from "react-router";
 import { useOrganizations } from "../api/useOrganizations";
+import { useSession } from "@/features/auth/api/useSession";
 
 export function OrganizationSelectRoute() {
   const { data, isLoading } = useOrganizations();
 
+  // todo: move this to a layout route
+  const session = useSession();
+
+  if (!session.data && !session.isPending) {
+    return <Navigate to="/auth" />;
+  }
+
   // switch out to use suspense
   if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (!data || data.length === 0) {
+    return <Navigate to="/app/new-organization" />;
   }
 
   return (

@@ -27,9 +27,11 @@ type Session struct {
 	User          *User     `bun:"rel:belongs-to,join:user_id=id"`
 }
 
+// nanoid to keep the ID more url friendly
+// might switch to uuid later
 type Organization struct {
 	bun.BaseModel `bun:"table:organization"`
-	ID            int64  `bun:"id,pk,autoincrement"`
+	ID            string `bun:"id,pk"`
 	Name          string `bun:"name"`
 }
 
@@ -38,7 +40,7 @@ type OrganizationMember struct {
 	ID             int64         `bun:"id,pk,autoincrement"`
 	Role           string        `bun:"role"`
 	UserID         int64         `bun:"user_id"`
-	OrganizationID int64         `bun:"organization_id"`
+	OrganizationID string        `bun:"organization_id"`
 	User           *User         `bun:"rel:belongs-to,join:user_id=id"`
 	Organization   *Organization `bun:"rel:belongs-to,join:organization_id=id"`
 }
@@ -52,8 +54,11 @@ type Token struct {
 	User          *User  `bun:"rel:belongs-to,join:user_id=id"`
 }
 
+// nanoid to keep the ID more url friendly
+// might switch to uuid later
 type Asset struct {
 	bun.BaseModel  `bun:"table:asset"`
+	ID             string        `bun:"id,pk"`
 	Key            string        `bun:"key"`
 	Size           int64         `bun:"size"`
 	Type           string        `bun:"type"`

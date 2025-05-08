@@ -7,6 +7,6 @@ export const createOrganizationSchema = z.object({
 export type CreateOrganizationSchema = z.infer<typeof createOrganizationSchema>;
 
 export interface Organization {
-  id: number;
+  id: string;
   name: string;
 }

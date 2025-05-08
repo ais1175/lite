@@ -63,7 +63,7 @@ const items = [
 export function AppSidebar() {
   return (
     <Sidebar>
-      <SidebarContent>
+      <SidebarContent className="bg-gray-100 dark:bg-accent/20">
         <SidebarGroup>
           <SidebarGroupLabel>Fivemanage Lite (dev)</SidebarGroupLabel>
           <SidebarGroupContent>

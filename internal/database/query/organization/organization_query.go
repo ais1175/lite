@@ -21,9 +21,9 @@ func Create(ctx context.Context, db *bun.DB, organization *database.Organization
 	return tx, nil
 }
 
-func Find(ctx context.Context, db *bun.DB, id int64) (*database.Organization, error) {
+func Find(ctx context.Context, db *bun.DB, ID string) (*database.Organization, error) {
 	organization := new(database.Organization)
-	err := db.NewSelect().Model(organization).Where("id = ?", id).Scan(ctx)
+	err := db.NewSelect().Model(organization).Where("id = ?", ID).Scan(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/fivemanage/lite/api"
+	"github.com/fivemanage/lite/internal/crypt"
 	"github.com/fivemanage/lite/internal/database"
 	organizationquery "github.com/fivemanage/lite/internal/database/query/organization"
 	"github.com/uptrace/bun"
@@ -20,8 +21,14 @@ func NewService(db *bun.DB) *Service {
 }
 
 func (r *Service) CreateOrganization(ctx context.Context, data *api.CreateOrganizationRequest, userID int64) (*api.Organization, error) {
+	orgId, err := crypt.GeneratePrimaryKey()
+	if err != nil {
+		return nil, err
+	}
+
 	dbOrganization := &database.Organization{
 		Name: data.Name,
+		ID:   orgId,
 	}
 
 	orgTx, err := organizationquery.Create(ctx, r.db, dbOrganization)
@@ -56,8 +63,8 @@ func (r *Service) CreateOrganization(ctx context.Context, data *api.CreateOrgani
 	return organization, nil
 }
 
-func (r *Service) FindOrganizationByID(ctx context.Context, id int64) (*api.Organization, error) {
-	dbOrganization, err := organizationquery.Find(ctx, r.db, id)
+func (r *Service) FindOrganizationByID(ctx context.Context, ID string) (*api.Organization, error) {
+	dbOrganization, err := organizationquery.Find(ctx, r.db, ID)
 	if err != nil {
 		return nil, err
 	}
