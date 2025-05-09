@@ -30,7 +30,7 @@
 
 First run all migrations.
 
-1. Init the migration: `go cmd/lite/lite.go db init
+1. Init the migration: `go cmd/lite/lite.go db init`
 2. Run the migrations: `go cmd/lite/lite.go db migrate`
 
 Start the actual app: 3. Run `air` or `go cmd/lite/lite.go` in the root directory to start the Go application 4. In `web/`, run `pnpm dev` to start the React application.
