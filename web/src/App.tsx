@@ -8,7 +8,7 @@ import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { ProtectedRoute } from "./features/auth/routes/ProtectedRoute";
 import { NewOrganizationRoute } from "./features/organizations/routes/NewOrganizationRoute";
 import { OrganizationSelectRoute } from "./features/organizations/routes/OrganizationSelectRoute";
-import { FilesRoute } from "./features/files/FilesRoute";
+const StorageRoute = lazy(() => import("./features/files/StorageRoute"));
 const TokensRoute = lazy(() => import("./features/tokens/routes/TokensRoute"));
 
 const queryClient = new QueryClient();
@@ -33,7 +33,7 @@ function App() {
                   <Route index element={<AppDashboard />} />
                   {/* Should probably wrap a suspense around this */}
                   <Route path="tokens" element={<TokensRoute />} />
-                  <Route path="files" element={<FilesRoute />} />
+                  <Route path="storage" element={<StorageRoute />} />
                 </Route>
               </Route>
             </Route>

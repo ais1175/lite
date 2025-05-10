@@ -20,11 +20,10 @@ import {
 } from "@/components/ui/Sidebar";
 import { NavLink } from "react-router";
 
-// Menu items.
 const items = [
   {
-    title: "Files",
-    url: "files",
+    title: "Storage",
+    url: "storage",
     icon: Folders,
     comingSoon: false,
   },

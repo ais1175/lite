@@ -29,9 +29,9 @@ type Server struct {
 
 // TODO: Add sentry for monitoring. There should be an opt-out option.
 func NewServer(
-	authservice *auth.Auth,
-	tokenservice *token.Service,
-	fileservice *file.Service,
+	authService *auth.Auth,
+	tokenService *token.Service,
+	fileService *file.Service,
 	organizationService *organization.Service,
 ) *echo.Echo {
 	app := echo.New()
@@ -40,7 +40,6 @@ func NewServer(
 	// not good, not bad
 	app.Validator = &_validator.CustomValidator{Validator: validator.New()}
 	app.Use(middleware.Recover())
-	app.Use(middleware.Logger())
 
 	app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Filesystem: getFileSystem("dist"),
@@ -54,11 +53,12 @@ func NewServer(
 
 	internalapi.Add(
 		apiGroup,
-		authservice,
-		tokenservice,
+		authService,
+		tokenService,
 		organizationService,
+		fileService,
 	)
-	publicapi.Add(apiGroup, fileservice)
+	publicapi.Add(apiGroup, fileService)
 
 	return app
 }

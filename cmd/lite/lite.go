@@ -34,7 +34,7 @@ var rootCmd = &cobra.Command{
 		driver := viper.GetString("driver")
 		dsn := viper.GetString("dsn")
 
-		fmt.Println("Starting Fivemanage...")
+		logrus.Info("Starting Fivemanage...")
 
 		db := database.New(driver)
 		store := db.Connect(dsn)

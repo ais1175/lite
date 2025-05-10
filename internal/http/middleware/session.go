@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -14,8 +13,6 @@ func Session(authService *auth.Auth) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			ctx := c.Request().Context()
 
-			fmt.Println(c.Request().URL.Path)
-			// ignore /auth endpoints
 			if strings.HasPrefix(c.Request().URL.Path, "/api/auth") {
 				return next(c)
 			}

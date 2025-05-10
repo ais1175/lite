@@ -2,14 +2,13 @@ package file
 
 import (
 	"context"
-	"fmt"
 	"mime/multipart"
 
-	"github.com/fivemanage/lite/internal/crypt"
+	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/database"
-	filequery "github.com/fivemanage/lite/internal/database/query/file"
+	"github.com/fivemanage/lite/internal/database/query/file"
 	"github.com/fivemanage/lite/internal/storage"
-	"github.com/gabriel-vasile/mimetype"
+	"github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 )
 
@@ -33,18 +32,18 @@ func (s *Service) CreateFile(
 	fileHeader *multipart.FileHeader,
 ) error {
 	var err error
-	key, contentType, err := generateFileKey(organizationID, fileType, file, fileHeader)
+	key, contentType, err := generateFileKey(organizationID, file, fileHeader)
 	if err != nil {
 		return err
 	}
 
-	dbFile := &database.Asset{
+	asset := &database.Asset{
 		Type: fileType,
 		Size: fileHeader.Size,
 		Key:  key,
 	}
 
-	tx, err := filequery.Create(ctx, s.db, dbFile)
+	tx, err := filequery.Create(ctx, s.db, asset)
 	if err != nil {
 		return err
 	}
@@ -61,20 +60,31 @@ func (s *Service) CreateFile(
 	return nil
 }
 
-func generateFileKey(organizationID, fileType string, file multipart.File, fileHeader *multipart.FileHeader) (string, string, error) {
-	filename, err := crypt.GenerateFilename()
+func (s *Service) ListStorageFiles(
+	ctx context.Context,
+	organizationID string,
+	search string,
+) ([]*api.Asset, error) {
+	var err error
+
+	files, err := filequery.FindStorageFiles(ctx, s.db, organizationID, search)
 	if err != nil {
-		return "", "", err
+		storageError := &ListStorageError{
+			ErrorMsg: err.Error(),
+		}
+		logrus.WithError(storageError).
+			WithField("organization_id", organizationID).
+			Error("FileService.ListStorageFiles")
+		return nil, storageError
 	}
 
-	buf := make([]byte, fileHeader.Size)
-	_, err = file.Read(buf)
-	if err != nil {
-		return "", "", err
+	assets := make([]*api.Asset, len(files))
+	for i, file := range files {
+		assets[i] = &api.Asset{
+			ID:   file.ID,
+			Type: file.Type,
+			Key:  file.Key,
+			Size: file.Size,
+		}
 	}
 
-	mime := mimetype.Detect(buf)
-	key := fmt.Sprintf("%s/%s.%s", organizationID, filename, mime.Extension())
-
-	return key, mime.String(), nil
-}
