@@ -2,10 +2,10 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/Sidebar";
+} from "@/components/ui/sidebar";
 import { Link, Outlet, useLocation, useParams } from "react-router";
 import { AppSidebar } from "./AppSidebar";
-import { Separator } from "@/components/ui/Separator";
+import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,7 +13,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/Breadcrumb";
+} from "@/components/ui/breadcrumb";
 import { ModeToggle } from "@/components/theme/ModeToggle";
 import { Params } from "@/typings/router";
 import { useCurrentOrganization } from "@/features/organizations/api/useCurrentOrganization";

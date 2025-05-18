@@ -21,7 +21,7 @@ func registerMediaApi(group *echo.Group, fileService *file.Service) {
 			})
 		}
 
-		err = fileService.CreateFile(ctx, "", "image", file, header)
+		err = fileService.CreateFile(ctx, "", file, header)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
@@ -40,7 +40,7 @@ func registerMediaApi(group *echo.Group, fileService *file.Service) {
 			})
 		}
 
-		err = fileService.CreateFile(ctx, "", "video", file, header)
+		err = fileService.CreateFile(ctx, "", file, header)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
@@ -59,7 +59,7 @@ func registerMediaApi(group *echo.Group, fileService *file.Service) {
 			})
 		}
 
-		err = fileService.CreateFile(ctx, "", "audio", file, header)
+		err = fileService.CreateFile(ctx, "", file, header)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}

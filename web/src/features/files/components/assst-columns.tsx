@@ -56,7 +56,7 @@ export function assetColumns(): ColumnDef<Asset>[] {
         const type = asset.type;
 
         let Icon = ImageIcon;
-        const href = `storage/asset/${asset.id}`;
+        const href = `storage/${asset.id}`;
 
         if (type === "video") {
           Icon = VideoIcon;
@@ -87,27 +87,29 @@ export function assetColumns(): ColumnDef<Asset>[] {
         format(new Date(info.getValue() as Date), "yyyy-MM-dd HH:mm:ss"),
     },
     {
-      accessorKey: "url",
+      accessorKey: "key",
       header: "URL",
-      cell: (info) => (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={(event) =>
-                  copyToClipboard(event, info.getValue() as string)
-                }
-                className="cursor-pointer rounded-md bg-accent/60 p-2 hover:bg-accent"
-              >
-                <ClipboardCopy size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Copy URL</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ),
+      cell: (info) => {
+        const url = `${import.meta.env.DOMAIN}/${info.getValue() as string}`;
+
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(event) => copyToClipboard(event, url)}
+                  className="cursor-pointer rounded-md bg-accent/60 p-2 hover:bg-accent"
+                >
+                  <ClipboardCopy size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copy URL</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
     },
     /*{
         id: "delete",

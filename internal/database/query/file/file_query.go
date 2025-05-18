@@ -47,13 +47,11 @@ func FindStorageFiles(ctx context.Context, db *bun.DB, organizationID, search st
 	return files, nil
 }
 
-func FindTotalStorageCount(ctx context.Context, db *bun.DB, organizationID string) (int64, error) {
-	var count int64
-
-	_, err := db.NewSelect().
+func FindTotalStorageCount(ctx context.Context, db *bun.DB, organizationID string) (int, error) {
+	count, err := db.NewSelect().
 		Model((*database.Asset)(nil)).
 		Where("organization_id = ?", organizationID).
-		ScanAndCount(ctx, count)
+		Count(ctx)
 	if err != nil {
 		return 0, err
 	}

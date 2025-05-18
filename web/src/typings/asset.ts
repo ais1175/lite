@@ -4,3 +4,8 @@ export interface Asset {
   size: number;
   type: string;
 }
+
+export interface AssetResponse {
+  files: Asset[];
+  totalCount: number;
+}

@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router";
 import { IS_DEV } from "@/utils/http-util";
 import { useForm } from "react-hook-form";
@@ -20,7 +20,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/Form";
+} from "@/components/ui/form";
 
 const registerSchema = z.object({
   username: z.string(),

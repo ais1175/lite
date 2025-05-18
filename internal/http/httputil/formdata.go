@@ -3,11 +3,14 @@ package httputil
 import (
 	"mime/multipart"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 )
 
 func File(r *http.Request, key string) (file multipart.File, fileHeader *multipart.FileHeader, err error) {
 	err = r.ParseMultipartForm(32 << 20)
 	if err != nil {
+		logrus.WithError(err).Error("failed to parse multipart form")
 		return nil, nil, err
 	}
 

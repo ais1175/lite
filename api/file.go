@@ -1,6 +1,9 @@
 package api
 
-import "mime/multipart"
+import (
+	"mime/multipart"
+	"time"
+)
 
 type UploadFile struct {
 	FileHeader *multipart.FileHeader
@@ -8,13 +11,14 @@ type UploadFile struct {
 }
 
 type Asset struct {
-	ID   string
-	Key  string
-	Size int64
-	Type string
+	ID        string    `json:"id"`
+	Key       string    `json:"key"`
+	Size      int64     `json:"size"`
+	Type      string    `json:"type"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type AssetResponse struct {
-	StorageFiles []Asset `json:"storageFiles"`
-	Total        int64   `json:"total"`
+	StorageFiles []*Asset `json:"files"`
+	TotalCount   int      `json:"totalCount"`
 }

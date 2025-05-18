@@ -64,7 +64,7 @@ type Asset struct {
 	Type           string        `bun:"type"`
 	CreatedAt      time.Time     `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 	UpdatedAt      time.Time     `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
-	OrganizationID int64         `bun:"organization_id"`
+	OrganizationID string        `bun:"organization_id"`
 	Organization   *Organization `bun:"rel:belongs-to,join:organization_id=id"`
 }
 
