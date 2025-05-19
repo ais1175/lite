@@ -22,6 +22,7 @@ jobs:
         uses: Magikon/github-tag-action@5.0.0
         id: tag
         env:
+          RELEASE_BRANCHES: master
           PREFIX: dev
           PRERELEASE_SUFFIX: beta
           MAJOR: "BREAKING*CHANGE|*#major*"
