@@ -1,10 +1,9 @@
-import { Checkbox } from "@/components/ui/Checkbox";
 import {
   Tooltip,
   TooltipProvider,
   TooltipTrigger,
   TooltipContent,
-} from "@/components/ui/Tooltip";
+} from "@/components/ui/tooltip";
 import { copyToClipboard } from "@/lib/browser/keyboard";
 import { Asset } from "@/typings/asset";
 import { ColumnDef } from "@tanstack/react-table";
