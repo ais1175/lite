@@ -56,7 +56,7 @@ export function assetColumns(): ColumnDef<Asset>[] {
         const type = asset.type;
 
         let Icon = ImageIcon;
-        const href = `storage/${asset.id}`;
+        const href = `${asset.id}`;
 
         if (type === "video") {
           Icon = VideoIcon;
