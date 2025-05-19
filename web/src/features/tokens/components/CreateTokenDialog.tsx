@@ -5,21 +5,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/Dialog";
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-} from "@/components/ui/Form";
+} from "@/components/ui/form";
 import { type TokenParams, tokenSchema } from "@/typings/token";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useCreateToken } from "../api/useCreateToken";
 import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { KeyRound } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "@/typings/query";
