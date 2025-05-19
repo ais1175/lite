@@ -2,7 +2,6 @@ name: Pre Release
 
 on:
   push:
-    # branches to consider in the event; optional, defaults to all
     branches:
       - develop
 
@@ -17,18 +16,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bump version and push tag
-        id: bump_version
-        uses: hennejg/github-tag-action@v4.3.1
         with:
-          dry_run: true
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: '0'
+      - name: Bump version and push tag
+        uses: Magikon/github-tag-action@v5.0.0
+        id: tag
+        env:
+          PREFIX: dev
+          PRERELEASE_SUFFIX: beta
+          MAJOR: "BREAKING*CHANGE|*#major*"
+          MINOR: "*feat*|*#minor*"
+          PATCH: "*fix*|*chore*|*docs*|*update*|#patch"
 
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter.yml
+          tag: ${{ steps.tag.outputs.new_tag }}
+          version: ${{ steps.tag.outputs.new_tag }}
           prerelease: true
           publish: true
-          prerelease-identifier: 'beta'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
