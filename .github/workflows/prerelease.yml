@@ -1,7 +1,9 @@
 name: Pre Release
 
 on:
-  push:
+  pull_request:
+    types: 
+      - closed
     branches:
       - develop
 
@@ -13,6 +15,7 @@ env:
 
 jobs:
   release_nightly:
+    if: github.event.pull_request.merged == true
     permissions:
       contents: write
       pull-requests: write
@@ -38,14 +41,15 @@ jobs:
 
 
       - name: Bump version and push tag
-        uses: Magikon/github-tag-action@5.0.0
+        uses: anothrNick/github-tag-action@v1
         id: tag
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_BRANCHES: master
-          PRERELEASE_SUFFIX: beta
-          MAJOR: "BREAKING*CHANGE|*#major*"
-          MINOR: "*feat*|*#minor*"
-          PATCH: "*fix*|*chore*|*docs*|*update*|#patch"
+          MAJOR_STRING_TOKEN: "BREAKING*CHANGE|*#major*"
+          MINOR_STRING_TOKEN: "*feat*|*#minor*"
+          PATCH_STRING_TOKEN: "*fix*|*chore*|*docs*|*update*|#patch|*tweak*"
+          DEFAULT_BRANCH: develop
 
       - name: Extract metadata
         id: meta
@@ -58,7 +62,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           file: ./build/package/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           annotations: ${{ steps.meta.outputs.annotations }}
           tags: |
