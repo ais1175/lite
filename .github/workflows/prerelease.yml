@@ -26,8 +26,8 @@ jobs:
 
       - uses: release-drafter/release-drafter@v6
         with:
+          config-name: release-drafter.yml
           prerelease: true
-          tag: ${{ github.steps.bump_version.outputs.tag }}
           publish: true
           prerelease-identifier: 'beta'
         env:
