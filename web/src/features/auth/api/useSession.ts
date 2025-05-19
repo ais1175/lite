@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 export function useSession() {
   const { data, isPending } = useQuery({
     queryKey: [QueryKeys.Session],
-    queryFn: () => fetchApi<Session>("/api/auth/session"),
+    queryFn: () => fetchApi<Session>("/api/dash/auth/session"),
   });
 
   return { data, isPending };

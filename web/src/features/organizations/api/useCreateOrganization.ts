@@ -6,7 +6,7 @@ export function useCreateOrganization() {
   const { mutate, isPending } = useMutation({
     mutationFn: async (params: Omit<Organization, "id">) => {
       try {
-        return await fetchApi("/api/organization", {
+        return await fetchApi("/api/dash/organization", {
           method: "POST",
           body: JSON.stringify(params),
         });

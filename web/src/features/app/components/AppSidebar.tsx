@@ -17,7 +17,7 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/Sidebar";
+} from "@/components/ui/sidebar";
 import { NavLink } from "react-router";
 
 const items = [
@@ -64,7 +64,9 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent className="bg-gray-100 dark:bg-accent/20">
         <SidebarGroup>
-          <SidebarGroupLabel>Fivemanage Lite (dev)</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            Fivemanage Lite ({import.meta.env.VITE_VERSION})
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

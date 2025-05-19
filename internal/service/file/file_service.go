@@ -1,8 +1,10 @@
 package file
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
 	"mime/multipart"
 
 	"github.com/fivemanage/lite/api"
@@ -70,7 +72,22 @@ func (s *Service) CreateFile(
 		return err
 	}
 
-	err = s.storage.UploadFile(ctx, file, key, mimeType)
+	// you'd think we didn't need to do this, but the since we read the file before this step to get mim type and shit
+	// we need to reset the file pointer and read it again
+	buffer, err := s.encode(file, fileHeader)
+	if err != nil {
+		logrus.WithError(err).WithField("organization_id", organizationID).Error("FileService.CreateStorageFile")
+		if err := tx.Rollback(); err != nil {
+			logrus.WithError(err).WithField("organization_id", organizationID).Error("FileService.CreateStorageFile")
+			return err
+		}
+
+		return UploadStorageError{
+			ErrorMsg: err.Error(),
+		}
+	}
+
+	err = s.storage.UploadFile(ctx, buffer, key, mimeType)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			return err
@@ -125,16 +142,35 @@ func (s *Service) CreateStorageFile(
 
 	tx, err := filequery.Create(ctx, s.db, asset)
 	if err != nil {
+		logrus.WithError(err).WithField("organization_id", organizationID).Error("FileService.CreateStorageFile")
 		return err
 	}
 
-	err = s.storage.UploadFile(ctx, file, key, mimeType)
+	buffer, err := s.encode(file, fileHeader)
 	if err != nil {
+		logrus.WithError(err).WithField("organization_id", organizationID).Error("FileService.CreateStorageFile")
 		if err := tx.Rollback(); err != nil {
+			logrus.WithError(err).WithField("organization_id", organizationID).Error("FileService.CreateStorageFile")
 			return err
 		}
 
-		return err
+		return UploadStorageError{
+			ErrorMsg: err.Error(),
+		}
+	}
+
+	err = s.storage.UploadFile(ctx, buffer, key, mimeType)
+	if err != nil {
+		logrus.WithError(err).WithField("organization_id", organizationID).Error("FileService.CreateStorageFile")
+
+		if err := tx.Rollback(); err != nil {
+			logrus.WithError(err).WithField("organization_id", organizationID).Error("FileService.CreateStorageFile")
+			return err
+		}
+
+		return UploadStorageError{
+			ErrorMsg: err.Error(),
+		}
 	}
 
 	err = tx.Commit()
@@ -192,4 +228,19 @@ func (s *Service) ListStorageFiles(
 	}
 
 	return response, nil
+}
+
+func (s *Service) encode(file multipart.File, header *multipart.FileHeader) (*bytes.Reader, error) {
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	buf := make([]byte, header.Size)
+	_, err := file.Read(buf)
+	if err != nil {
+		return nil, err
+	}
+
+	reader := bytes.NewReader(buf)
+	return reader, nil
 }

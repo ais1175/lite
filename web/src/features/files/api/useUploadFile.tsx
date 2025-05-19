@@ -11,7 +11,7 @@ export function useUploadFile() {
       formData.append("file", file);
 
       const response = await fetch(
-        `/api/storage/${params.organizationId}/upload`,
+        `/api/dash/storage/${params.organizationId}/upload`,
         {
           method: "POST",
           body: formData,

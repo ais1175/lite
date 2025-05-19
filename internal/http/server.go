@@ -50,9 +50,10 @@ func NewServer(
 	}))
 
 	apiGroup := app.Group("/api")
+	dashApi := apiGroup.Group("/dash")
 
 	internalapi.Add(
-		apiGroup,
+		dashApi,
 		authService,
 		tokenService,
 		organizationService,

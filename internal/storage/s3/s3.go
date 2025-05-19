@@ -2,6 +2,7 @@ package s3
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
@@ -47,14 +48,17 @@ func New() *Storage {
 }
 
 // UploadFile will both upload and replace as long as the key is the same
-func (s *Storage) UploadFile(ctx context.Context, file io.Reader, key, contenType string) error {
+func (s *Storage) UploadFile(ctx context.Context, file io.Reader, key, contentType string) error {
+	fmt.Println("Uploading file to S3 bucket")
+
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),
 		Key:         aws.String(key),
 		Body:        file,
-		ContentType: aws.String(contenType),
+		ContentType: aws.String(contentType),
 	})
 	if err != nil {
+		fmt.Println("Error uploading file to S3 bucket", err)
 		return err
 	}
 

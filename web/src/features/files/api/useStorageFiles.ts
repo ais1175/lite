@@ -9,7 +9,7 @@ export function useStorageFiles(params: AssetParams) {
     queryFn: async () => {
       try {
         return await fetchApi<AssetResponse>(
-          `/api/storage/${params.organizationId}`,
+          `/api/dash/storage/${params.organizationId}`,
         );
       } catch (error) {
         if (error instanceof ApiError) {

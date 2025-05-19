@@ -39,7 +39,7 @@ export function AuthForm({
 
   const handleRegisterSubmit = async (data: z.infer<typeof registerSchema>) => {
     console.log({ data });
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch("/api/dash/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

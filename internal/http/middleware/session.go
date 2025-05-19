@@ -13,7 +13,7 @@ func Session(authService *auth.Auth) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			ctx := c.Request().Context()
 
-			if strings.HasPrefix(c.Request().URL.Path, "/api/auth") {
+			if strings.HasPrefix(c.Request().URL.Path, "/api/dash/auth") {
 				return next(c)
 			}
 

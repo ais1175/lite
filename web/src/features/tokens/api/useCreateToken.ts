@@ -8,7 +8,7 @@ export function useCreateToken() {
     mutationKey: [QueryKeys.CreateToken],
     mutationFn: async (params: TokenParams) => {
       try {
-        return await fetchApi<TokenPreview>("/api/token", {
+        return await fetchApi<TokenPreview>("/api/dash/token", {
           method: "POST",
           body: JSON.stringify(params),
         });
