@@ -17,7 +17,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm run build
 
 
-
 # Backend
 FROM golang:1.24 AS backend
 
@@ -35,12 +34,14 @@ ENV CGO_ENABLED=0
 RUN go build -o /app/main ./cmd/lite/lite.go
 
 # Application
-FROM alpine:latest
+FROM gcr.io/distroless/static-debian12
 
 WORKDIR /app
 
 COPY --from=backend /app/main /app/main
 
 EXPOSE 8080
+
+USER nonroot:nonroot
 
 CMD ["/app/main"]
