@@ -51,12 +51,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           file: ./build/package/Dockerfile
-          platforms:
-            - linux/amd64
-            - linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ env.dockerImage }}:latest
             ${{ env.dockerImage }}:${{ steps.tag.outputs.new_tag }}
 
       - uses: release-drafter/release-drafter@v6
