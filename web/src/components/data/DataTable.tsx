@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { useEffect, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/Table";
+} from "@/components/ui/table";
 import { useLocation, useSearchParams, useNavigate } from "react-router";
 import { Asset } from "@/typings/asset";
 //import { DataDeleteDialog } from "./DataDeleteDialog";
@@ -118,7 +118,7 @@ export function DataTable<T extends Asset>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody className="divide-y divide-gray-800">
+          <TableBody className="divide-y">
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => {
                 return (
