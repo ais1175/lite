@@ -24,7 +24,7 @@ jobs:
           dry_run: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v6.0.0
         with:
           config-name: release-drafter.yml
           prerelease: true
