@@ -1,5 +1,38 @@
 # Fivemanage Lite
 
+## Deployment
+To run Fivemanage Lite, you need to set up a MySQL or PostgreSQL database and an object storage service (S3 compatible).
+
+### Database
+You can use either MySQL or PostgreSQL. The default is MySQL.
+
+### Object Storage
+Currently only S3 or compatible object storage is supported.
+- s3
+- r2
+- minio
+
+Azure and GCP are not supported yet.
+
+### Docker
+You can have a look at the `docker-compose.yml` file in the `deployments` folder.
+
+
+### Environment variables
+You can copy the `.env.template` file to `.env` and set the values.
+
+```env
+ADMIN_PASSWORD=verysecurepassword
+DB_DRIVER=mysql
+DSN="root:root@tcp(localhost:3306)/fivemanage-lite"
+
+AWS_ACCESS_KEY_ID=xxxx
+AWS_SECRET_ACCESS_KEY=xxxx
+AWS_ENDPOINT=
+AWS_BUCKET=
+AWS_REGION=
+```
+
 ## Development
 
 ### Prerequisites
