@@ -7,7 +7,9 @@ export function useCurrentOrganization(organizationId: string | undefined) {
     queryKey: [organizationId],
     queryFn: async () => {
       try {
-        return fetchApi<Organization>(`/api/organization/${organizationId}`);
+        return fetchApi<Organization>(
+          `/api/dash/organization/${organizationId}`,
+        );
       } catch (err) {
         if (err instanceof ApiError) {
           throw new Error(err.message);
