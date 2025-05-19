@@ -50,6 +50,7 @@ jobs:
           MINOR_STRING_TOKEN: "*feat*|*#minor*"
           PATCH_STRING_TOKEN: "*fix*|*chore*|*docs*|*update*|#patch|*tweak*"
           DEFAULT_BRANCH: develop
+          PRERELEASE: true
 
       - name: Extract metadata
         id: meta
