@@ -9,7 +9,7 @@ on:
 jobs:
   lint_frontend:
     name: Lint frontend
-    working_directory: web 
+    working-directory: web 
     runs-on: ubuntu-latest
     strategy:
       matrix:
