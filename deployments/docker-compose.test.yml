@@ -28,8 +28,11 @@ services:
     container_name: lite
     environment:
       - DB_DRIVER=mysql
+      - ADMIN_PASSWORD=password
       - PORT=8080
       - DSN=root:root@tcp(database-test:3306)/fivemanage-lite-dev
+      - AWS_BUCKET=fivemanage-lite
+      - AWS_REGION=auto
     ports:
       - "8080:8080"
     depends_on:
