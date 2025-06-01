@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+const (
+	TokenCacheKey = "tokenHash_%s.data"
+)
+
 type Item struct {
 	Object     any
 	Expiration int64

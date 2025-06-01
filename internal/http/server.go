@@ -16,7 +16,6 @@ import (
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
-	"github.com/spf13/afero/mem"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4/middleware"

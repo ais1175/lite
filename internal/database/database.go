@@ -46,12 +46,15 @@ type OrganizationMember struct {
 }
 
 type Token struct {
-	bun.BaseModel `bun:"table:token"`
-	ID            int64  `bun:"id,pk,autoincrement"`
-	TokenHash     string `bun:"token_hash"`
-	Identifier    string `bun:"identifier"`
-	UserID        int    `bun:"user_id"`
-	User          *User  `bun:"rel:belongs-to,join:user_id=id"`
+	bun.BaseModel  `bun:"table:token"`
+	ID             int64         `bun:"id,pk,autoincrement"`
+	TokenHash      string        `bun:"token_hash"`
+	Identifier     string        `bun:"identifier"`
+	UserID         int           `bun:"user_id"`
+	User           *User         `bun:"rel:belongs-to,join:user_id=id"`
+	OrganizationID string        `bun:"organization_id"`
+	Organization   *Organization `bun:"rel:belongs-to,join:organization_id=id"`
+	CreatedAt      time.Time     `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 }
 
 // nanoid to keep the ID more url friendly

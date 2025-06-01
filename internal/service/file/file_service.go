@@ -12,7 +12,7 @@ import (
 	"github.com/fivemanage/lite/internal/database"
 	"github.com/fivemanage/lite/internal/database/query/file"
 	"github.com/fivemanage/lite/internal/http/httputil"
-	"github.com/fivemanage/lite/internal/storage"
+	"github.com/fivemanage/lite/pkg/storage"
 	"github.com/sirupsen/logrus"
 	"github.com/uptrace/bun"
 )

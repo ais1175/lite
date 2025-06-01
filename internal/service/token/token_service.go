@@ -46,8 +46,9 @@ func (r *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest)
 	}
 
 	token := &database.Token{
-		Identifier: data.Identifier,
-		TokenHash:  tokenHash,
+		OrganizationID: data.OrganizationID,
+		Identifier:     data.Identifier,
+		TokenHash:      tokenHash,
 	}
 
 	err = tokenquery.Create(ctx, r.db, token)

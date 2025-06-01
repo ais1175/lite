@@ -2,6 +2,7 @@ package internalapi
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/fivemanage/lite/api"
@@ -13,16 +14,25 @@ import (
 )
 
 func registerTokensApi(group *echo.Group, tokenService *token.Service) {
-	group.POST("/token", func(c echo.Context) error {
+	group.POST("/token/:organizationId", func(c echo.Context) error {
 		// this might not work well for telemetry
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
+
+		// we caaaan put this in the request body as well
+		// and if we keep it like this, we should create some org middleware
+		// cuz this can be anything right now....fuck it tho
+		// it should also probably be :organizationId/token, not the other way around
+		// which again makes it easier to use a middleware
+		organizationID := c.QueryParam("organizationId")
 
 		var data api.CreateTokenRequest
 		if err := validator.BindAndValidate(c, &data); err != nil {
 			logrus.WithError(err).Error("failed to bind and validate token")
 			return echo.NewHTTPError(500, err)
 		}
+
+		data.OrganizationID = organizationID
 
 		apiToken, err := tokenService.CreateToken(ctx, &data)
 		if err != nil {
