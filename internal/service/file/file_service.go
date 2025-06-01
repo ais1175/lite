@@ -72,7 +72,7 @@ func (s *Service) CreateFile(
 		return err
 	}
 
-	// you'd think we didn't need to do this, but the since we read the file before this step to get mim type and shit
+	// you'd think we didn't need to do this, but the since we read the file before this step to get mime type and shit
 	// we need to reset the file pointer and read it again
 	buffer, err := s.encode(file, fileHeader)
 	if err != nil {

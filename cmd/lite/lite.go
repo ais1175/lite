@@ -18,6 +18,7 @@ import (
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/internal/storage"
 	"github.com/fivemanage/lite/migrate"
+	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -49,11 +50,14 @@ var rootCmd = &cobra.Command{
 		fileservice := file.NewService(store, storageLayer)
 		organizationservice := organization.NewService(store)
 
+		memcache := cache.NewMemcache(0)
+
 		server := http.NewServer(
 			authservice,
 			tokenservice,
 			fileservice,
 			organizationservice,
+			memcache,
 		)
 
 		// todo: check if we have an admin user

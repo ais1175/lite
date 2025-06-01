@@ -16,6 +16,11 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 
+function formatFilename(key: string) {
+  const parts = key.split("/");
+  return parts[parts.length - 1];
+}
+
 export function assetColumns(): ColumnDef<Asset>[] {
   return [
     /*{
@@ -52,6 +57,7 @@ export function assetColumns(): ColumnDef<Asset>[] {
       cell: (info) => {
         const asset = info.row.original;
         const displayValue = asset.key?.replace(/^(image|video|audio)\//, "");
+
         const type = asset.type;
 
         let Icon = ImageIcon;
@@ -64,9 +70,14 @@ export function assetColumns(): ColumnDef<Asset>[] {
         }
 
         return (
-          <Link to={href} className="flex items-center hover:underline">
+          <Link to={href} className="flex items-center ">
             <Icon size={18} className="mr-2 text-gray-400" />
-            {displayValue}
+            <span>
+              <p className="hover:underline">{formatFilename(displayValue)}</p>
+              <p className="text-xs text-muted-foreground">
+                {displayValue.split("/")[0]}
+              </p>
+            </span>
           </Link>
         );
       },

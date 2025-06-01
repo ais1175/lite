@@ -4,12 +4,15 @@ import (
 	"net/http"
 
 	"github.com/fivemanage/lite/internal/http/httputil"
+	"github.com/fivemanage/lite/internal/http/middleware"
 	"github.com/fivemanage/lite/internal/service/file"
+	"github.com/fivemanage/lite/internal/service/token"
+	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
 )
 
 // DRY they said
-func registerMediaApi(group *echo.Group, fileService *file.Service) {
+func registerMediaApi(group *echo.Group, fileService *file.Service, tokenService *token.Service, cache *cache.Cache) {
 	group.POST("/image", func(c echo.Context) error {
 		var err error
 		ctx := c.Request().Context()
@@ -27,7 +30,7 @@ func registerMediaApi(group *echo.Group, fileService *file.Service) {
 		}
 
 		return c.JSON(200, nil)
-	})
+	}, middleware.TokenAuth(tokenService, cache))
 
 	group.POST("/video", func(c echo.Context) error {
 		var err error

@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/fivemanage/lite/internal/storage/s3"
+	"github.com/fivemanage/lite/pkg/storage/s3"
 )
 
 type StorageLayer interface {

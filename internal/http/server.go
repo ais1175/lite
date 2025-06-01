@@ -14,7 +14,9 @@ import (
 	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/organization"
 	"github.com/fivemanage/lite/internal/service/token"
+	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/afero/mem"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4/middleware"
@@ -33,6 +35,7 @@ func NewServer(
 	tokenService *token.Service,
 	fileService *file.Service,
 	organizationService *organization.Service,
+	memcache *cache.Cache,
 ) *echo.Echo {
 	app := echo.New()
 	app.Debug = true
@@ -59,7 +62,7 @@ func NewServer(
 		organizationService,
 		fileService,
 	)
-	publicapi.Add(apiGroup, fileService)
+	publicapi.Add(apiGroup, fileService, tokenService, memcache)
 
 	return app
 }

@@ -21,6 +21,17 @@ func NewService(db *bun.DB) *Service {
 	}
 }
 
+func (r *Service) GetToken(ctx context.Context, tokenHash string) (*database.Token, error) {
+	var err error
+
+	token, err := tokenquery.SelectByHash(ctx, r.db, tokenHash)
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
 func (r *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest) (string, error) {
 	var err error
 
