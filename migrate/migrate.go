@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 )
 
 var (
@@ -55,9 +56,10 @@ var (
 				panic(err)
 			}
 			if group.IsZero() {
-				fmt.Printf("there are no new migrations to run (database is up to date)\n")
+				otelzap.S().Info("there are no new migrations to run (database is up to date)")
 			}
-			fmt.Printf("migrated to %s\n", group)
+
+			otelzap.S().Infof("migrated to %s", group)
 		},
 	}
 
@@ -130,7 +132,9 @@ func AutoMigrate(ctx context.Context, db *bun.DB) {
 		panic(err)
 	}
 	if group.IsZero() {
-		fmt.Printf("there are no new migrations to run (database is up to date)\n")
+		otelzap.S().Info("there are no new migrations to run (database is up to date)")
+		return
 	}
-	fmt.Printf("migrated to %s\n", group)
+
+	otelzap.S().Infof("migrated to %s", group)
 }

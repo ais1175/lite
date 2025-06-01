@@ -18,11 +18,14 @@ import (
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/migrate"
 	"github.com/fivemanage/lite/pkg/cache"
+	"github.com/fivemanage/lite/pkg/logger"
+	"github.com/fivemanage/lite/pkg/otel"
 	"github.com/fivemanage/lite/pkg/storage"
 	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 var rootCmd = &cobra.Command{
@@ -35,7 +38,33 @@ var rootCmd = &cobra.Command{
 		driver := viper.GetString("driver")
 		dsn := viper.GetString("dsn")
 
-		logrus.Info("Starting Fivemanage...")
+		sugaredLogger := logger.NewZap()
+
+		defer func() {
+			err := sugaredLogger.Sync()
+			if err != nil {
+				log.Printf("failed to sync logger: %v", err)
+			}
+		}()
+
+		otelzap.L().Info("starting Fivemanage application")
+
+		otelShutdown, err := otel.SetupTracer()
+		if err != nil {
+			sugaredLogger.Fatalf("failed to setup OpenTelemetry: %v", err)
+		}
+
+		defer func() {
+			log.Println("Attempting to shutdown OpenTelemetry...")
+			otelCtx, otelCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer otelCancel()
+
+			if shutdownErr := otelShutdown(otelCtx); shutdownErr != nil {
+				log.Printf("failed to shutdown OpenTelemetry: %v", shutdownErr)
+			} else {
+				log.Println("OpenTelemetry shutdown successfully.")
+			}
+		}()
 
 		db := database.New(driver)
 		store := db.Connect(dsn)
@@ -64,7 +93,7 @@ var rootCmd = &cobra.Command{
 		// if not, create an admin user with the ADMIN_PASSWORD ENV
 		err = authservice.CreateAdminUser()
 		if err != nil {
-			logrus.WithError(err).Error("Failed to create admin user")
+			sugaredLogger.Error("failed to create admin user", zap.Error(err))
 			return
 		}
 
@@ -74,7 +103,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		go func() {
-			fmt.Printf("Server is running on port %d...\n", port)
+			otelzap.S().Infof("Fivemanage is running on port %d", port)
 			if err := srv.ListenAndServe(); err != nil && err != nethttp.ErrServerClosed {
 				log.Fatalf("listen: %s\n", err)
 			}
@@ -87,6 +116,7 @@ var rootCmd = &cobra.Command{
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
+
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Fatal("Server Shutdown:", err)
 		}
@@ -100,7 +130,6 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	err := godotenv.Load()
-	// TODO: Only for development
 	if err != nil {
 		log.Println("Error loading .env file. Probably becasue we're in production")
 	}

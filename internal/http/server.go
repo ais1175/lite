@@ -2,7 +2,6 @@ package http
 
 import (
 	"embed"
-	"fmt"
 	"io/fs"
 	"net/http"
 	"strings"
@@ -16,6 +15,8 @@ import (
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4/middleware"
@@ -38,6 +39,8 @@ func NewServer(
 ) *echo.Echo {
 	app := echo.New()
 	app.Debug = true
+
+	app.Use(otelecho.Middleware("lite-api"))
 
 	// not good, not bad
 	app.Validator = &_validator.CustomValidator{Validator: validator.New()}
@@ -72,7 +75,7 @@ func getFileSystem(path string) http.FileSystem {
 		panic(err)
 	}
 
-	fmt.Println("Serving static files from", path)
+	otelzap.S().Infof("Serving static files from %s", path)
 
 	return http.FS(fs)
 }

@@ -2,7 +2,6 @@ package internalapi
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/fivemanage/lite/api"
