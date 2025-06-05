@@ -2,6 +2,7 @@ package token
 
 import (
 	"context"
+	"os"
 	"strconv"
 
 	"github.com/fivemanage/lite/api"
@@ -27,8 +28,10 @@ func NewService(db *bun.DB) *Service {
 	}
 }
 
-func (r *Service) GetToken(ctx context.Context, tokenHash string) (*database.Token, error) {
-	var err error
+func (r *Service) GetToken(ctx context.Context, apiToken string) (*database.Token, error) {
+	// we need to add this check to the env check in cmd/lite/lite.go
+	hmacSecret := os.Getenv("API_TOKEN_HMAC_SECRET")
+	tokenHash := crypt.ComputeHMAC(hmacSecret, apiToken)
 
 	token, err := tokenquery.SelectByHash(ctx, r.db, tokenHash)
 	if err != nil {
@@ -39,17 +42,13 @@ func (r *Service) GetToken(ctx context.Context, tokenHash string) (*database.Tok
 }
 
 func (r *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest) (string, error) {
-	var err error
-
 	apiToken, err := crypt.GenerateApiKey()
 	if err != nil {
 		return "", err
 	}
 
-	tokenHash, err := crypt.HashPassword(apiToken)
-	if err != nil {
-		return "", err
-	}
+	hmacSecret := os.Getenv("API_TOKEN_HMAC_SECRET")
+	tokenHash := crypt.ComputeHMAC(hmacSecret, apiToken)
 
 	token := &database.Token{
 		OrganizationID: data.OrganizationID,
