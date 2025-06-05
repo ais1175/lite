@@ -22,9 +22,6 @@ func (r *PostgreSQL) Connect(dsn string) *bun.DB {
 
 	for i := range maxRetries {
 		sqldb = sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
-		if err != nil {
-			otelzap.L().Fatal("Failed to prepare PostgreSQL connection", zap.Error(err))
-		}
 
 		err = sqldb.Ping()
 		if err == nil {
