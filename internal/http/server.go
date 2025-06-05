@@ -45,6 +45,7 @@ func NewServer(
 	// not good, not bad
 	app.Validator = &_validator.CustomValidator{Validator: validator.New()}
 	app.Use(middleware.Recover())
+	// app.Use(middleware.Logger())
 
 	app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Filesystem: getFileSystem("dist"),

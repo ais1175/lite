@@ -12,7 +12,7 @@ func generateFileKey(organizationID string, ext string) (string, error) {
 		return "", err
 	}
 
-	key := fmt.Sprintf("%s/%s.%s", organizationID, filename, ext)
+	key := fmt.Sprintf("%s/%s%s", organizationID, filename, ext)
 	return key, nil
 }
 

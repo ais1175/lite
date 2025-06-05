@@ -47,17 +47,17 @@ func NewMemcache(defaultExpiration int64) *Cache {
 	return c
 }
 
-func (c *Cache) Set(key string, value any, expiration int64) {
+func (c *Cache) Set(key string, value any, expiration time.Duration) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	if expiration <= 0 {
-		expiration = c.defaultExpiration
+		expiration = time.Duration(c.defaultExpiration)
 	}
 
 	c.items[key] = Item{
 		Object:     value,
-		Expiration: expiration,
+		Expiration: time.Now().Add(expiration).Unix(),
 	}
 }
 

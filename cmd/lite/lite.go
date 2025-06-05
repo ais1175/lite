@@ -129,6 +129,8 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	log.Println("Initializing Fivemanage...")
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file. Probably becasue we're in production")

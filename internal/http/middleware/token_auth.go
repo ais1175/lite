@@ -2,11 +2,14 @@ package middleware
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/fivemanage/lite/internal/database"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 func TokenAuth(tokenService *token.Service, memcache *cache.Cache) echo.MiddlewareFunc {
@@ -24,19 +27,25 @@ func TokenAuth(tokenService *token.Service, memcache *cache.Cache) echo.Middlewa
 
 			var tokenData *database.Token
 
+			// this all feels kinda weird to me
 			key := fmt.Sprintf(cache.TokenCacheKey, token)
 			tokenCacheData, found := memcache.Get(key)
 			if !found {
 				tokenData, err = tokenService.GetToken(ctx, token)
 				if err != nil {
+					otelzap.L().Error("failed to ge token from service", zap.Error(err))
 					return nil
 				}
 
-				memcache.Set(key, tokenData, 100)
+				memcache.Set(key, tokenData, 5*time.Minute)
+
+				c.Set("org_id", tokenData.OrganizationID)
+				return next(c)
 			}
 
 			tokenData, ok := tokenCacheData.(*database.Token)
 			if !ok {
+				fmt.Println("failed to assert token data")
 				return nil
 			}
 

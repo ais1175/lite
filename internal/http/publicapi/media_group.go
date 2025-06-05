@@ -3,6 +3,7 @@ package publicapi
 import (
 	"net/http"
 
+	"github.com/fivemanage/lite/internal/auth"
 	"github.com/fivemanage/lite/internal/http/httputil"
 	"github.com/fivemanage/lite/internal/http/middleware"
 	"github.com/fivemanage/lite/internal/service/file"
@@ -14,59 +15,43 @@ import (
 // DRY they said
 func registerMediaApi(group *echo.Group, fileService *file.Service, tokenService *token.Service, cache *cache.Cache) {
 	group.POST("/image", func(c echo.Context) error {
-		var err error
-		ctx := c.Request().Context()
-
-		file, header, err := httputil.File(c.Request(), "image")
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, echo.Map{
-				"error": err.Error(),
-			})
-		}
-
-		err = fileService.CreateFile(ctx, "", file, header)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err)
-		}
-
-		return c.JSON(200, nil)
+		return handler(c, "image", fileService)
 	}, middleware.TokenAuth(tokenService, cache))
 
 	group.POST("/video", func(c echo.Context) error {
-		var err error
-		ctx := c.Request().Context()
-
-		file, header, err := httputil.File(c.Request(), "video")
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, echo.Map{
-				"error": err.Error(),
-			})
-		}
-
-		err = fileService.CreateFile(ctx, "", file, header)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err)
-		}
-
-		return c.JSON(200, nil)
-	})
+		return handler(c, "video", fileService)
+	}, middleware.TokenAuth(tokenService, cache))
 
 	group.POST("/audio", func(c echo.Context) error {
-		var err error
-		ctx := c.Request().Context()
+		return handler(c, "audio", fileService)
+	}, middleware.TokenAuth(tokenService, cache))
 
-		file, header, err := httputil.File(c.Request(), "audio")
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, echo.Map{
-				"error": err.Error(),
-			})
-		}
+	group.POST("/file", func(c echo.Context) error {
+		return handler(c, "file", fileService)
+	}, middleware.TokenAuth(tokenService, cache))
+}
 
-		err = fileService.CreateFile(ctx, "", file, header)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err)
-		}
+func handler(c echo.Context, fileType string, fileService *file.Service) error {
+	var err error
+	ctx := c.Request().Context()
 
-		return c.JSON(200, nil)
-	})
+	orgId, err := auth.CurrentOrgId(c)
+	if err != nil {
+		// we should probably have a better error here
+		return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized: "+err.Error())
+	}
+
+	file, header, err := httputil.File(c.Request(), fileType)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": err.Error(),
+		})
+	}
+
+	err = fileService.CreateFile(ctx, orgId, file, header)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(200, nil)
 }

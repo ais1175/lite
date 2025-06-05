@@ -59,15 +59,13 @@ func (s *Service) CreateFile(
 		}
 	}
 
-	// add organizationID to the asset
-	asset := &database.Asset{
-		ID:   primaryKey,
-		Type: fileType,
-		Size: fileHeader.Size,
-		Key:  key,
-	}
-
-	tx, err := filequery.Create(ctx, s.db, asset)
+	tx, err := filequery.Create(ctx, s.db, &database.Asset{
+		ID:             primaryKey,
+		Type:           fileType,
+		Size:           fileHeader.Size,
+		OrganizationID: organizationID,
+		Key:            key,
+	})
 	if err != nil {
 		return err
 	}
@@ -131,16 +129,13 @@ func (s *Service) CreateStorageFile(
 	// should it become an issue, we can look for it and check if its empty;
 	key := generateWebKey(organizationID, fileHeader.Filename)
 
-	// add organizationID to the asset
-	asset := &database.Asset{
+	tx, err := filequery.Create(ctx, s.db, &database.Asset{
 		ID:             primaryKey,
 		OrganizationID: organizationID,
 		Type:           fileType,
 		Size:           fileHeader.Size,
 		Key:            key,
-	}
-
-	tx, err := filequery.Create(ctx, s.db, asset)
+	})
 	if err != nil {
 		logrus.WithError(err).WithField("organization_id", organizationID).Error("FileService.CreateStorageFile")
 		return err
