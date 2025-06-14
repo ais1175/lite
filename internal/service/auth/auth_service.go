@@ -28,7 +28,7 @@ type Auth struct {
 	db     *bun.DB
 }
 
-func New(db *bun.DB) *Auth {
+func NewService(db *bun.DB) *Auth {
 	githubConfig := auth.NewGithubConfig()
 
 	return &Auth{
