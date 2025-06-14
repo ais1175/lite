@@ -77,12 +77,5 @@ type Store interface {
 
 // TODO: Return error if driver is not supported
 func New(driver string) Store {
-	switch driver {
-	case "mysql":
-		return &MySQL{}
-	case "pg", "postgresql":
-		return &PostgreSQL{}
-	default:
-		return nil
-	}
+	return &PostgreSQL{}
 }
