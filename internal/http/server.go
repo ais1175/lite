@@ -11,6 +11,7 @@ import (
 	_validator "github.com/fivemanage/lite/internal/http/validator"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/fivemanage/lite/internal/service/file"
+	"github.com/fivemanage/lite/internal/service/log"
 	"github.com/fivemanage/lite/internal/service/organization"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/pkg/cache"
@@ -35,6 +36,7 @@ func NewServer(
 	tokenService *token.Service,
 	fileService *file.Service,
 	organizationService *organization.Service,
+	logService *log.Service,
 	memcache *cache.Cache,
 ) *echo.Echo {
 	app := echo.New()
@@ -65,7 +67,7 @@ func NewServer(
 		organizationService,
 		fileService,
 	)
-	publicapi.Add(apiGroup, fileService, tokenService, memcache)
+	publicapi.Add(apiGroup, fileService, tokenService, logService, memcache)
 
 	return app
 }
