@@ -103,6 +103,7 @@ func (s *Service) CreateFile(
 	return nil
 }
 
+// this is basically the function that is used for any dashboard uploads
 func (s *Service) CreateStorageFile(
 	ctx context.Context,
 	organizationID string,
