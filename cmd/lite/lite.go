@@ -74,7 +74,7 @@ var rootCmd = &cobra.Command{
 
 		storageLayer := storage.New("s3")
 
-		authservice := auth.New(store)
+		authservice := auth.NewService(store)
 		tokenservice := token.NewService(store)
 		fileservice := file.NewService(store, storageLayer)
 		organizationservice := organization.NewService(store)
@@ -136,7 +136,7 @@ func init() {
 		log.Println("Error loading .env file. Probably becasue we're in production")
 	}
 
-	rootCmd.PersistentFlags().String("driver", "mysql", "Database driver")
+	rootCmd.PersistentFlags().String("driver", "pg", "Database driver")
 	rootCmd.Flags().Int("port", 8080, "Port to serve Fivemanage")
 	rootCmd.Flags().String("dsn", "", "Database DSN")
 
