@@ -62,7 +62,7 @@ function reducer(state: UploadState, action: FileAction) {
 }
 
 export function UploadDialog() {
-  const { mutate, isPending } = useUploadFile();
+  const { mutate } = useUploadFile();
 
   const [uploadState, dispatch] = useReducer(reducer, {
     files: [],

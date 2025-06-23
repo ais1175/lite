@@ -73,7 +73,7 @@ export function AssetList() {
             isLoading={false}
             data={data.files}
             totalCount={data.totalCount}
-            onDelete={async (rows) => {}}
+            onDelete={async () => {}}
           />
         )}
       </div>
