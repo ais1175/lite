@@ -82,11 +82,13 @@ var rootCmd = &cobra.Command{
 
 		// setup and run migrations for clickhouse
 		chConfig := &clickhouse.Config{
-			Host:     "localhost:9000",
-			Username: "default",
-			Password: "password",
-			Database: "default",
+			Host:     viper.GetString("clickhouse-host"),
+			Username: viper.GetString("clickhouse-username"),
+			Password: viper.GetString("clickhouse-password"),
+			Database: viper.GetString("clickhouse-database"),
 		}
+
+		fmt.Println("Clickhouse config:", chConfig)
 
 		clickhouse.AutoMigrate(cmd.Context(), chConfig)
 
@@ -103,7 +105,7 @@ var rootCmd = &cobra.Command{
 		organizationService := organization.NewService(store)
 		logService := log.NewService(store, kafkaP, clickhouseClient)
 
-		worker := kafkaqueue.NewBatchWorker(logService, kafkaC)
+		worker := kafkaqueue.NewBatchWorker(clickhouseClient, kafkaC)
 
 		// kinda not sure what I want to do with this
 		// at some point we might actually want to run more than one worker
@@ -170,6 +172,10 @@ func init() {
 	rootCmd.PersistentFlags().String("driver", "pg", "Database driver")
 	rootCmd.Flags().Int("port", 8080, "Port to serve Fivemanage")
 	rootCmd.Flags().String("dsn", "", "Database DSN")
+	rootCmd.Flags().String("clickhouse-host", "localhost:9000", "Clickhouse host")
+	rootCmd.Flags().String("clickhouse-username", "default", "Clickhouse username")
+	rootCmd.Flags().String("clickhouse-password", "password", "Clickhouse password")
+	rootCmd.Flags().String("clickhouse-database", "default", "Clickhouse database")
 
 	viper.BindPFlag("driver", rootCmd.PersistentFlags().Lookup("driver"))
 	viper.BindPFlag("port", rootCmd.Flags().Lookup("port"))
@@ -177,6 +183,10 @@ func init() {
 	viper.BindEnv("driver", "DB_DRIVER")
 	viper.BindEnv("port", "PORT")
 	viper.BindEnv("dsn", "DSN")
+	viper.BindEnv("clickhouse-host", "CLICKHOUSE_HOST")
+	viper.BindEnv("clickhouse-username", "CLICKHOUSE_USERNAME")
+	viper.BindEnv("clickhouse-password", "CLICKHOUSE_PASSWORD")
+	viper.BindEnv("clickhouse-database", "CLICKHOUSE_DATABASE")
 
 	rootCmd.AddCommand(migrate.RootCmd)
 	migrate.RootCmd.AddCommand(

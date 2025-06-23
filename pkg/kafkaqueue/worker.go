@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/fivemanage/lite/internal/clickhouse"
-	"github.com/sirupsen/logrus"
 )
 
 const (

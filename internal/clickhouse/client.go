@@ -52,7 +52,7 @@ func getClickhouseOptions(config *Config) *clickhouse.Options {
 			Username: config.Username,
 			Password: config.Password,
 		},
-		MaxOpenConns: 1000,
+		// MaxOpenConns: 1000,
 		ClientInfo: clickhouse.ClientInfo{
 			Products: []struct {
 				Name    string

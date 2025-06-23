@@ -49,7 +49,7 @@ func logf(msg string, a ...any) {
 
 func NewProducer(logger *otelzap.Logger) *Queue {
 	writer := &kafka.Writer{
-		Addr: kafka.TCP("localhost:9092", "localhost:9093", "localhost:9094"),
+		Addr: kafka.TCP("localhost:9094"),
 		// tbh, I'm just not feeling like setting up partitions
 		// sooooo, topics and groups will have to do it
 		Topic:                  "batched",
@@ -76,7 +76,7 @@ func NewConsumer(logger *otelzap.Logger) *Queue {
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Dialer:      dialer,
-		Brokers:     []string{"localhost:9092", "localhost:9093", "localhost:9094"},
+		Brokers:     []string{"localhost:9094"},
 		Topic:       "batched",
 		GroupID:     ConsumerGroupName,
 		MaxBytes:    10e6,

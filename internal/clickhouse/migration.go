@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/fivemanage/lite/pkg/project"
+	"github.com/fivemanage/lite/internal/project"
 	"github.com/golang-migrate/migrate/v4"
 	clickhouseMigrate "github.com/golang-migrate/migrate/v4/database/clickhouse"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -34,6 +34,9 @@ func AutoMigrate(ctx context.Context, config *Config) {
 		fmt.Println("Error creating ClickHouse driver:", err)
 		panic(err)
 	}
+
+	root := project.GetRoot()
+	fmt.Println("Root path:", root)
 
 	migrationsPath := filepath.Join(project.GetRoot(), "internal", "clickhouse", "migrations")
 	absPath, err := filepath.Abs(migrationsPath)
