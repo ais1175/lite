@@ -88,8 +88,6 @@ var rootCmd = &cobra.Command{
 			Database: viper.GetString("clickhouse-database"),
 		}
 
-		fmt.Println("Clickhouse config:", chConfig)
-
 		clickhouse.AutoMigrate(cmd.Context(), chConfig)
 
 		clickhouseClient := clickhouse.NewClient(chConfig)
