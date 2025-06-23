@@ -37,7 +37,6 @@ func (r *KafkaBatchWorker) ProcessMessages() {
 
 			msg := r.consumer.ReadMessage(readCtx)
 			if msg != nil {
-				fmt.Println("Received message:", msg)
 				r.logs = append(r.logs, msg)
 			}
 

@@ -49,8 +49,6 @@ func New() *Storage {
 
 // UploadFile will both upload and replace as long as the key is the same
 func (s *Storage) UploadFile(ctx context.Context, file io.Reader, key, contentType string) error {
-	fmt.Println("Uploading file to S3 bucket")
-
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),
 		Key:         aws.String(key),
