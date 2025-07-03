@@ -3,12 +3,20 @@ package publicapi
 import (
 	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/auth"
+	"github.com/fivemanage/lite/internal/http/middleware"
 	"github.com/fivemanage/lite/internal/service/log"
+	"github.com/fivemanage/lite/internal/service/token"
+	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
 )
 
-func registerLogsApi(group *echo.Group, logService *log.Service) {
-	group.POST("/batch", func(c echo.Context) error {
+func registerLogsApi(
+	group *echo.Group,
+	logService *log.Service,
+	tokenService *token.Service,
+	cache *cache.Cache,
+) {
+	group.POST("/logs", func(c echo.Context) error {
 		ctx := c.Request().Context()
 
 		orgID, err := auth.CurrentOrgId(c)
@@ -23,6 +31,8 @@ func registerLogsApi(group *echo.Group, logService *log.Service) {
 
 		logService.SubmitLogs(ctx, orgID, "dataset", logs)
 
-		return nil
-	})
+		return c.JSON(200, echo.Map{
+			"success": true,
+		})
+	}, middleware.TokenAuth(tokenService, cache))
 }

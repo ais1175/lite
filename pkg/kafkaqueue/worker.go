@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/fivemanage/lite/internal/clickhouse"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 const (
@@ -44,6 +46,10 @@ func (r *KafkaBatchWorker) ProcessMessages() {
 				err := r.clickhouseClient.BatchWriteLogRows(ctx, r.logs)
 				if err != nil {
 					fmt.Println("failed to batch write logs", err.Error())
+				}
+
+				if len(r.logs) > 0 {
+					otelzap.L().Info("flushed logs to clickhouse", zap.Int("count", len(r.logs)))
 				}
 
 				r.lastFlush = time.Now()
