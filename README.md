@@ -23,14 +23,21 @@ You can copy the `.env.template` file to `.env` and set the values.
 
 ```env
 ADMIN_PASSWORD=verysecurepassword
-DB_DRIVER=mysql
-DSN="root:root@tcp(localhost:3306)/fivemanage-lite"
+DSN=postgres://username:password@host:5432/fivemanage-lite?sslmode=disable
 
-AWS_ACCESS_KEY_ID=xxxx
-AWS_SECRET_ACCESS_KEY=xxxx
+API_TOKEN_HMAC_SECRET=<32 bytes secret>
+
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
 AWS_ENDPOINT=
 AWS_BUCKET=
 AWS_REGION=
+
+CLICKHOUSE_HOST=localhost:19000
+CLICKHOUSE_DATABASE=default
+# for prod, you should create a new user with a password, or change the default user
+CLICKHOUSE_USERNAME=default
+CLICKHOUSE_PASSWORD=password
 ```
 
 ## Development
@@ -47,23 +54,32 @@ AWS_REGION=
 1. Install node_modules in `/web`.
 2. Either run `go mod download` in the root directory, or just let `air` handle it for you, but simply running `air` in the root directory.
 3. Set up docker.
-   1. Run `docker compose -f deployments/docker-compose.yml -d`
+   1. Run `docker compose -f deployments/docker-compose.yml up -d`
 4. Set up environment variables
 
-   ```env
-   ADMIN_PASSWORD=password
-   DB_DRIVER=mysql
-   DSN="root:root@tcp(localhost:3306)/fivemanage-lite-dev"
-   ```
+```env
+ADMIN_PASSWORD=password
+DSN=postgres://postgres:root@localhost:5432/fivemanage-lite-dev?sslmode=disable
 
-   - `DB_DRIVER`
-     Can either be `mysql` or `pg`. Only mysql is properly tested.
+API_TOKEN_HMAC_SECRET=<32 bytes secret>
+
+AWS_ACCESS_KEY_ID=xxxx
+AWS_SECRET_ACCESS_KEY=xxxx
+AWS_ENDPOINT=
+AWS_BUCKET=
+AWS_REGION=
+
+CLICKHOUSE_HOST=localhost:19000
+CLICKHOUSE_DATABASE=default
+CLICKHOUSE_USERNAME=default
+CLICKHOUSE_PASSWORD=password
+```
 
 ### Running the application
 
-First run all migrations.
+Migrations for Clickhouse and PostgreSQL are run automatically when the application starts.
 
-1. Init the migration: `go cmd/lite/lite.go db init`
-2. Run the migrations: `go cmd/lite/lite.go db migrate`
 
-Start the actual app: 3. Run `air` or `go cmd/lite/lite.go` in the root directory to start the Go application 4. In `web/`, run `pnpm dev` to start the React application.
+Start the actual app: 
+1. Run `air` or `go run cmd/lite/lite.go` in the root directory to start the Go application 
+2. In `web/`, run `pnpm dev` to start the React application.
