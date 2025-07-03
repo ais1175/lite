@@ -32,7 +32,7 @@ func (r *Service) SubmitLogs(ctx context.Context, organizationId string, dataset
 		traceID, err := crypt.GeneratePrimaryKey()
 		if err != nil {
 			otelzap.L().Error("failed to generate trace id", zap.Error(err))
-			continue
+			break
 		}
 
 		timestamp := time.Now().UTC()
