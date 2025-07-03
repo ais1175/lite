@@ -6,8 +6,11 @@ import (
 
 	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/clickhouse"
+	"github.com/fivemanage/lite/internal/crypt"
 	"github.com/fivemanage/lite/pkg/kafkaqueue"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 type Service struct {
@@ -26,6 +29,12 @@ func (r *Service) SubmitLogs(ctx context.Context, organizationId string, dataset
 	clickhouseLogs := make([]*clickhouse.Log, len(logs))
 
 	for i, log := range logs {
+		traceID, err := crypt.GeneratePrimaryKey()
+		if err != nil {
+			otelzap.L().Error("failed to generate trace id", zap.Error(err))
+			break
+		}
+
 		timestamp := time.Now().UTC()
 		metadata := make(map[string]string)
 
@@ -44,14 +53,17 @@ func (r *Service) SubmitLogs(ctx context.Context, organizationId string, dataset
 		metadata["_resource"] = log.Resource
 
 		clickhouseLogs[i] = &clickhouse.Log{
-			TraceID:    "",
+			TraceID:    traceID,
 			Timestamp:  timestamp,
 			TeamID:     organizationId,
 			DatasetID:  datasetID,
 			Body:       log.Message,
-			Attributes: log.Metadata,
+			Attributes: metadata,
 		}
 	}
 
-	r.kafkaProducer.Submit(ctx, clickhouseLogs)
+	err := r.kafkaProducer.Submit(ctx, clickhouseLogs)
+	if err != nil {
+		otelzap.L().Error("failed to submit logs to kafka", zap.Error(err))
+	}
 }

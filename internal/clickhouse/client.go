@@ -27,7 +27,7 @@ type Log struct {
 	TeamID        string
 	DatasetID     string
 	Body          string
-	Attributes    map[string]any
+	Attributes    map[string]string
 	RetentionDays int
 }
 

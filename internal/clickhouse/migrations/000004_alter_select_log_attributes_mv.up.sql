@@ -9,11 +9,11 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS log_attributes_mv TO log_attributes (
     Value String
 ) AS
 SELECT 
-    arrayJoin(Metadata).1 AS Key,
+    arrayJoin(Attributes).1 AS Key,
     Timestamp,
     TraceId,
     DatasetId,
     TeamId,
-    arrayJoin(Metadata).2 AS Value
+    arrayJoin(Attributes).2 AS Value
 FROM logs
 WHERE Value != '';

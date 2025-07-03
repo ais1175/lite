@@ -10,6 +10,7 @@ import (
 	"github.com/fivemanage/lite/internal/clickhouse"
 	"github.com/segmentio/kafka-go"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 )
 
 // wow, so much randomness
@@ -54,11 +55,10 @@ func NewProducer(logger *otelzap.Logger) *Queue {
 		// sooooo, topics and groups will have to do it
 		Topic:                  "batched",
 		Balancer:               &kafka.LeastBytes{},
-		Async:                  false,
+		Async:                  true,
 		ReadTimeout:            KafkaOperationTimeout,
 		WriteTimeout:           KafkaOperationTimeout,
 		AllowAutoTopicCreation: true,
-		Logger:                 kafka.LoggerFunc(logf),
 		ErrorLogger:            kafka.LoggerFunc(logf),
 	}
 
@@ -80,7 +80,6 @@ func NewConsumer(logger *otelzap.Logger) *Queue {
 		Topic:       "batched",
 		GroupID:     ConsumerGroupName,
 		MaxBytes:    10e6,
-		Logger:      kafka.LoggerFunc(logf),
 		ErrorLogger: kafka.LoggerFunc(logf),
 	})
 
@@ -112,6 +111,8 @@ func (q *Queue) Submit(ctx context.Context, messages []*clickhouse.Log) error {
 		fmt.Println("failed to submit log", err.Error())
 		return err
 	}
+
+	otelzap.L().Info("submitted log to kafka", zap.String("topic", "batched"), zap.Int("count", len(messages)))
 
 	return nil
 }

@@ -15,5 +15,5 @@ func Add(group *echo.Group,
 	cache *cache.Cache,
 ) {
 	registerMediaApi(group, fileService, tokenService, cache)
-	registerLogsApi(group, logService)
+	registerLogsApi(group, logService, tokenService, cache)
 }
