@@ -16,19 +16,19 @@ import (
 func registerMediaApi(group *echo.Group, fileService *file.Service, tokenService *token.Service, cache *cache.Cache) {
 	group.POST("/image", func(c echo.Context) error {
 		return handler(c, "image", fileService)
-	}, middleware.TokenAuth(tokenService, cache))
+	}, middleware.TokenAuth(tokenService, cache), middleware.ValidateMime("image", middleware.WhitelistedImageMIME))
 
 	group.POST("/video", func(c echo.Context) error {
 		return handler(c, "video", fileService)
-	}, middleware.TokenAuth(tokenService, cache))
+	}, middleware.TokenAuth(tokenService, cache), middleware.ValidateMime("video", middleware.WhitelistedVideoMIME))
 
 	group.POST("/audio", func(c echo.Context) error {
 		return handler(c, "audio", fileService)
-	}, middleware.TokenAuth(tokenService, cache))
+	}, middleware.TokenAuth(tokenService, cache), middleware.ValidateMime("audio", middleware.WhitelistedAudioMIME))
 
 	group.POST("/file", func(c echo.Context) error {
 		return handler(c, "file", fileService)
-	}, middleware.TokenAuth(tokenService, cache))
+	}, middleware.TokenAuth(tokenService, cache), middleware.ValidateMime("file", nil))
 }
 
 func handler(c echo.Context, fileType string, fileService *file.Service) error {

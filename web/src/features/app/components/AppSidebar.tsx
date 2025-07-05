@@ -35,9 +35,9 @@ const items = [
   },
   {
     title: "Logs",
-    url: "#",
+    url: "logs",
     icon: Layers,
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     title: "Team",

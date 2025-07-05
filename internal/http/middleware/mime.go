@@ -1,4 +1,4 @@
-package http
+package middleware
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var whitelistedImageMIME = []string{
+var WhitelistedImageMIME = []string{
 	"image/png",
 	"image/apng",
 	"image/webp",
@@ -17,7 +17,7 @@ var whitelistedImageMIME = []string{
 	"image/gif",
 }
 
-var whitelistedVideoMIME = []string{
+var WhitelistedVideoMIME = []string{
 	"video/ogg",
 	"video/mp4",
 	"video/mpeg",
@@ -26,7 +26,7 @@ var whitelistedVideoMIME = []string{
 	"application/octet-stream",
 }
 
-var whitelistedAudioMIME = []string{
+var WhitelistedAudioMIME = []string{
 	"audio/mpeg",
 	"audio/mp3",
 	"audio/ogg",
@@ -36,7 +36,7 @@ var whitelistedAudioMIME = []string{
 	"application/octet-stream",
 }
 
-func (r *Server) validateMimeMiddleware(fileKey string, whitelistedTypes []string) echo.MiddlewareFunc {
+func ValidateMime(fileKey string, whitelistedTypes []string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			var err error

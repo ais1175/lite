@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -12,6 +13,7 @@ func Session(authService *auth.Auth) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx := c.Request().Context()
+			orgID := c.Param("organizationId")
 
 			if strings.HasPrefix(c.Request().URL.Path, "/api/dash/auth") {
 				return next(c)
@@ -25,6 +27,11 @@ func Session(authService *auth.Auth) echo.MiddlewareFunc {
 			session, err := authService.UserBySession(ctx, sessionCookie.Value)
 			if err != nil {
 				return err
+			}
+
+			if len(orgID) == 0 {
+				slog.Info("no orgID")
+				// authService.IsOrgMember(ctx, session.ID, orgID)
 			}
 
 			c.Set("user", session)

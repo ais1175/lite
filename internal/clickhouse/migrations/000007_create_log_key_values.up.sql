@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS log_key_values (
     Value String,
     Count UInt64,
     RetentionDays UInt32
-) ENGINE = SummingMergeTree
+) ENGINE = SummingMergeTree(Count)
 ORDER BY (TeamId, DatasetId, Key, Day, Value)
 TTL Day + toIntervalDay(RetentionDays)

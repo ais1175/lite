@@ -13,7 +13,7 @@ export function useCreateToken() {
     mutationFn: async (tokenParams: TokenParams) => {
       try {
         return await fetchApi<TokenPreview>(
-          `/api/dash/token/${params.organizationId}`,
+          `/api/dash/${params.organizationId}/token`,
           {
             method: "POST",
             body: JSON.stringify(tokenParams),
