@@ -121,7 +121,7 @@ func (q *Queue) ReadMessage(ctx context.Context) *clickhouse.Log {
 	m, err := q.kafkaC.ReadMessage(ctx)
 	if err != nil {
 		if err.Error() != "fetching message: context deadline exceeded" {
-			// q.logger.WithContext(ctx).WithError(err).Error("failed to read kafka message")
+			otelzap.L().Error("failed to read message from kafka", zap.Error(err))
 		}
 
 		return nil

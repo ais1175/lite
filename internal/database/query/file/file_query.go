@@ -11,7 +11,13 @@ import (
 
 // todo: rename to Insert
 func Create(ctx context.Context, db *bun.DB, file *database.Asset) (bun.Tx, error) {
+	var err error
+
 	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return tx, err
+	}
+
 	_, err = tx.NewInsert().Model(file).Exec(ctx)
 	if err != nil {
 		return tx, err

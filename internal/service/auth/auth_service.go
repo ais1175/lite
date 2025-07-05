@@ -63,7 +63,7 @@ func (a *Auth) CreateAdminUser() error {
 
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 	if adminPassword == "" {
-		return errors.New("Admin password is missing. Make sure ADMIN_PASSWORD is set.")
+		return errors.New("admin password is missing. make sure ADMIN_PASSWORD is set")
 	}
 
 	passwordHash, err := crypt.HashPassword(adminPassword)

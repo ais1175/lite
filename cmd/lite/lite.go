@@ -151,10 +151,9 @@ var rootCmd = &cobra.Command{
 		if err := srv.Shutdown(ctx); err != nil {
 			sugaredLogger.Fatal("Server Shutdown:", err)
 		}
-		select {
-		case <-ctx.Done():
-			sugaredLogger.Info("timeout of 5 seconds.")
-		}
+
+		<-ctx.Done()
+		sugaredLogger.Info("timeout of 5 seconds.")
 		sugaredLogger.Info("Server exiting")
 	},
 }
@@ -175,16 +174,34 @@ func init() {
 	rootCmd.Flags().String("clickhouse-password", "password", "Clickhouse password")
 	rootCmd.Flags().String("clickhouse-database", "default", "Clickhouse database")
 
-	viper.BindPFlag("driver", rootCmd.PersistentFlags().Lookup("driver"))
-	viper.BindPFlag("port", rootCmd.Flags().Lookup("port"))
-	viper.BindPFlag("dsn", rootCmd.Flags().Lookup("dsn"))
-	viper.BindEnv("driver", "DB_DRIVER")
-	viper.BindEnv("port", "PORT")
-	viper.BindEnv("dsn", "DSN")
-	viper.BindEnv("clickhouse-host", "CLICKHOUSE_HOST")
-	viper.BindEnv("clickhouse-username", "CLICKHOUSE_USERNAME")
-	viper.BindEnv("clickhouse-password", "CLICKHOUSE_PASSWORD")
-	viper.BindEnv("clickhouse-database", "CLICKHOUSE_DATABASE")
+	// fuck me
+	if err := viper.BindPFlag("port", rootCmd.Flags().Lookup("port")); err != nil {
+		bindError(err)
+	}
+	if err := viper.BindPFlag("dsn", rootCmd.Flags().Lookup("dsn")); err != nil {
+		bindError(err)
+	}
+	if err := viper.BindEnv("driver", "DB_DRIVER"); err != nil {
+		bindError(err)
+	}
+	if err := viper.BindEnv("port", "PORT"); err != nil {
+		bindError(err)
+	}
+	if err := viper.BindEnv("dsn", "DSN"); err != nil {
+		bindError(err)
+	}
+	if err := viper.BindEnv("clickhouse-host", "CLICKHOUSE_HOST"); err != nil {
+		bindError(err)
+	}
+	if err := viper.BindEnv("clickhouse-username", "CLICKHOUSE_USERNAME"); err != nil {
+		bindError(err)
+	}
+	if err := viper.BindEnv("clickhouse-password", "CLICKHOUSE_PASSWORD"); err != nil {
+		bindError(err)
+	}
+	if err := viper.BindEnv("clickhouse-database", "CLICKHOUSE_DATABASE"); err != nil {
+		bindError(err)
+	}
 
 	rootCmd.AddCommand(migrate.RootCmd)
 	migrate.RootCmd.AddCommand(
@@ -199,5 +216,11 @@ func init() {
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
+	}
+}
+
+func bindError(err error) {
+	if err != nil {
+		logrus.Fatal(err)
 	}
 }

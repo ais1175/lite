@@ -16,7 +16,7 @@ func GetMimeDetails(fileHeader *multipart.FileHeader, file multipart.File) (stri
 	buf := make([]byte, fileHeader.Size)
 	_, err = file.Read(buf)
 	if err != nil {
-		return "", "", "", fmt.Errorf("error reading file: %w\n", err)
+		return "", "", "", fmt.Errorf("error reading file: %w", err)
 	}
 
 	mime := mimetype.Detect(buf)

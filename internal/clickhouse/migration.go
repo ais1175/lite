@@ -3,6 +3,7 @@ package clickhouse
 import (
 	"context"
 	"fmt"
+	"log"
 	"path/filepath"
 	"time"
 
@@ -19,7 +20,13 @@ func AutoMigrate(ctx context.Context, config *Config) {
 
 	options := getClickhouseOptions(config)
 	db := clickhouse.OpenDB(options)
-	defer db.Close()
+
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			log.Fatalf("Error closing database: %v\n", err)
+		}
+	}()
 
 	if err := db.PingContext(ctx); err != nil {
 		fmt.Println("Error pinging database:", err)
@@ -35,17 +42,12 @@ func AutoMigrate(ctx context.Context, config *Config) {
 		panic(err)
 	}
 
-	root := project.GetRoot()
-	fmt.Println("Root path:", root)
-
 	migrationsPath := filepath.Join(project.GetRoot(), "internal", "clickhouse", "migrations")
 	absPath, err := filepath.Abs(migrationsPath)
 	if err != nil {
 		fmt.Println("Error getting absolute path:", err)
 		panic(err)
 	}
-
-	fmt.Println("Migrations path:", absPath)
 
 	sourcePath := filepath.ToSlash(absPath)
 	sourceURL := "file://" + sourcePath
