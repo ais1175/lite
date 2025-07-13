@@ -7,6 +7,7 @@ import (
 	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/clickhouse"
 	"github.com/fivemanage/lite/internal/crypt"
+	"github.com/fivemanage/lite/internal/service/dataset"
 	"github.com/fivemanage/lite/pkg/kafkaqueue"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -14,24 +15,32 @@ import (
 )
 
 type Service struct {
-	db            *bun.DB
-	kafkaProducer *kafkaqueue.Queue
+	db             *bun.DB
+	kafkaProducer  *kafkaqueue.Queue
+	datasetService *dataset.Service
 }
 
-func NewService(db *bun.DB, kafkaProducer *kafkaqueue.Queue, clickhouseClient *clickhouse.Client) *Service {
+func NewService(db *bun.DB, kafkaProducer *kafkaqueue.Queue, clickhouseClient *clickhouse.Client, datasetService *dataset.Service) *Service {
 	return &Service{
-		db:            db,
-		kafkaProducer: kafkaProducer,
+		db:             db,
+		kafkaProducer:  kafkaProducer,
+		datasetService: datasetService,
 	}
 }
 
-func (r *Service) SubmitLogs(ctx context.Context, organizationId string, datasetID string, logs []api.Log) {
+func (r *Service) SubmitLogs(ctx context.Context, organizationId string, datasetName string, logs []api.Log) {
 	clickhouseLogs := make([]*clickhouse.Log, len(logs))
 
 	for i, log := range logs {
 		traceID, err := crypt.GeneratePrimaryKey()
 		if err != nil {
 			otelzap.L().Error("failed to generate trace id", zap.Error(err))
+			break
+		}
+
+		dataset, err := r.datasetService.FindByName(ctx, organizationId, datasetName)
+		if err != nil {
+			otelzap.L().Error("failed to find dataset", zap.Error(err))
 			break
 		}
 
@@ -53,12 +62,13 @@ func (r *Service) SubmitLogs(ctx context.Context, organizationId string, dataset
 		metadata["_resource"] = log.Resource
 
 		clickhouseLogs[i] = &clickhouse.Log{
-			TraceID:    traceID,
-			Timestamp:  timestamp,
-			TeamID:     organizationId,
-			DatasetID:  datasetID,
-			Body:       log.Message,
-			Attributes: metadata,
+			TraceID:       traceID,
+			Timestamp:     timestamp,
+			TeamID:        organizationId,
+			DatasetID:     dataset.ID,
+			Body:          log.Message,
+			Attributes:    metadata,
+			RetentionDays: 30,
 		}
 	}
 

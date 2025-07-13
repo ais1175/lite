@@ -10,6 +10,8 @@ import { NewOrganizationRoute } from "./features/organizations/routes/NewOrganiz
 import { OrganizationSelectRoute } from "./features/organizations/routes/OrganizationSelectRoute";
 const StorageRoute = lazy(() => import("./features/files/StorageRoute"));
 const TokensRoute = lazy(() => import("./features/tokens/routes/TokensRoute"));
+const DatasetRoute = lazy(() => import("./features/logs/routes/dataset-route"));
+const LogsRoute = lazy(() => import("./features/logs/routes/logs-route"));
 
 const queryClient = new QueryClient();
 
@@ -31,9 +33,12 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route path=":organizationId" element={<AppLayout />}>
                   <Route index element={<AppDashboard />} />
-                  {/* Should probably wrap a suspense around this */}
                   <Route path="tokens" element={<TokensRoute />} />
                   <Route path="storage" element={<StorageRoute />} />
+                  <Route path="logs">
+                    <Route index element={<DatasetRoute />} />
+                    <Route path=":datasetId" element={<LogsRoute />} />
+                  </Route>
                 </Route>
               </Route>
             </Route>

@@ -13,7 +13,7 @@ import (
 )
 
 func registerTokensApi(group *echo.Group, tokenService *token.Service) {
-	group.POST("/token/:organizationId", func(c echo.Context) error {
+	group.POST("/:organizationId/token", func(c echo.Context) error {
 		// this might not work well for telemetry
 		ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 		defer cancel()
@@ -23,7 +23,7 @@ func registerTokensApi(group *echo.Group, tokenService *token.Service) {
 		// cuz this can be anything right now....fuck it tho
 		// it should also probably be :organizationId/token, not the other way around
 		// which again makes it easier to use a middleware
-		organizationID := c.QueryParam("organizationId")
+		organizationID := c.Param("organizationId")
 
 		var data api.CreateTokenRequest
 		if err := validator.BindAndValidate(c, &data); err != nil {
@@ -32,7 +32,6 @@ func registerTokensApi(group *echo.Group, tokenService *token.Service) {
 		}
 
 		data.OrganizationID = organizationID
-
 		apiToken, err := tokenService.CreateToken(ctx, &data)
 		if err != nil {
 			return echo.NewHTTPError(500, err)

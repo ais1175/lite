@@ -104,11 +104,14 @@ var (
 			migrator := migrate.NewMigrator(db, migrations.Migrations)
 
 			name := strings.Join(args, "_")
-			mf, err := migrator.CreateGoMigration(cmd.Context(), name)
+			mf, err := migrator.CreateSQLMigrations(cmd.Context(), name)
 			if err != nil {
 				panic(err)
 			}
-			fmt.Printf("created migration %s (%s)\n", mf.Name, mf.Path)
+
+			for _, m := range mf {
+				fmt.Printf("created migration %s (%s)\n", m.Name, m.Path)
+			}
 		},
 	}
 )

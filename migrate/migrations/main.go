@@ -7,6 +7,7 @@ import (
 )
 
 //go:embed *.go
+//go:embed *.sql
 var sqlMigrations embed.FS
 
 var Migrations = migrate.NewMigrations()

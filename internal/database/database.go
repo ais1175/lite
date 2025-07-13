@@ -71,6 +71,18 @@ type Asset struct {
 	Organization   *Organization `bun:"rel:belongs-to,join:organization_id=id"`
 }
 
+type Dataset struct {
+	bun.BaseModel  `bun:"table:dataset"`
+	ID             string        `bun:"id,pk"`
+	Name           string        `bun:"name"`
+	Description    string        `bun:"description"`
+	RetentionDays  int           `bun:"retention_days"`
+	CreatedAt      time.Time     `bun:"created_at,nullzero,notnull,default:current_timestamp"`
+	UpdatedAt      time.Time     `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
+	OrganizationID string        `bun:"organization_id"`
+	Organization   *Organization `bun:"rel:belongs-to,join:organization_id=id"`
+}
+
 type Store interface {
 	Connect(dsn string) *bun.DB
 }

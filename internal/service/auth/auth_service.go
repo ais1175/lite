@@ -267,6 +267,6 @@ func (a *Auth) CreateSessionCookie(sessionID string) *http.Cookie {
 		SameSite: http.SameSiteLaxMode,
 		HttpOnly: true,
 		Path:     "/",
-		MaxAge:   3600,
+		Expires:  time.Now().Add(time.Hour * 24),
 	}
 }

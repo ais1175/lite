@@ -10,6 +10,7 @@ import (
 	"github.com/fivemanage/lite/internal/http/publicapi"
 	_validator "github.com/fivemanage/lite/internal/http/validator"
 	"github.com/fivemanage/lite/internal/service/auth"
+	"github.com/fivemanage/lite/internal/service/dataset"
 	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/log"
 	"github.com/fivemanage/lite/internal/service/organization"
@@ -37,6 +38,7 @@ func NewServer(
 	fileService *file.Service,
 	organizationService *organization.Service,
 	logService *log.Service,
+	datasetService *dataset.Service,
 	memcache *cache.Cache,
 ) *echo.Echo {
 	app := echo.New()
@@ -46,7 +48,7 @@ func NewServer(
 
 	// not good, not bad
 	app.Validator = &_validator.CustomValidator{Validator: validator.New()}
-	app.Use(middleware.Recover())
+	//	app.Use(middleware.Recover())
 	// app.Use(middleware.Logger())
 
 	app.Use(middleware.StaticWithConfig(middleware.StaticConfig{
@@ -66,6 +68,7 @@ func NewServer(
 		tokenService,
 		organizationService,
 		fileService,
+		datasetService,
 	)
 	publicapi.Add(apiGroup, fileService, tokenService, logService, memcache)
 

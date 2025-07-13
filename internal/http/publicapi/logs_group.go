@@ -18,6 +18,7 @@ func registerLogsApi(
 ) {
 	group.POST("/logs", func(c echo.Context) error {
 		ctx := c.Request().Context()
+		dataset := c.Request().Header.Get("X-Fivemanage-Dataset")
 
 		orgID, err := auth.CurrentOrgId(c)
 		if err != nil {
@@ -29,7 +30,7 @@ func registerLogsApi(
 			return err
 		}
 
-		logService.SubmitLogs(ctx, orgID, "dataset", logs)
+		logService.SubmitLogs(ctx, orgID, dataset, logs)
 
 		return c.JSON(200, echo.Map{
 			"success": true,

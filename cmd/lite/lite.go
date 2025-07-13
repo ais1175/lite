@@ -13,6 +13,7 @@ import (
 	"github.com/fivemanage/lite/internal/database"
 	"github.com/fivemanage/lite/internal/http"
 	"github.com/fivemanage/lite/internal/service/auth"
+	"github.com/fivemanage/lite/internal/service/dataset"
 	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/log"
 	"github.com/fivemanage/lite/internal/service/organization"
@@ -101,7 +102,8 @@ var rootCmd = &cobra.Command{
 		tokenService := token.NewService(store)
 		fileService := file.NewService(store, storageLayer)
 		organizationService := organization.NewService(store)
-		logService := log.NewService(store, kafkaP, clickhouseClient)
+		datsetService := dataset.NewService(store, clickhouseClient)
+		logService := log.NewService(store, kafkaP, clickhouseClient, datsetService)
 
 		worker := kafkaqueue.NewBatchWorker(clickhouseClient, kafkaC)
 
@@ -117,6 +119,7 @@ var rootCmd = &cobra.Command{
 			fileService,
 			organizationService,
 			logService,
+			datsetService,
 			memcache,
 		)
 

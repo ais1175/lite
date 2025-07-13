@@ -31,6 +31,11 @@ type Log struct {
 	RetentionDays int
 }
 
+type LogField struct {
+	Field string
+	Type  string
+}
+
 func NewClient(config *Config) *Client {
 	c := &Client{}
 
