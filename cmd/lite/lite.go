@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	nethttp "net/http"
 	"os"
 	"os/signal"
@@ -25,11 +26,9 @@ import (
 	"github.com/fivemanage/lite/pkg/otel"
 	"github.com/fivemanage/lite/pkg/storage"
 	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 )
 
 var rootCmd = &cobra.Command{
@@ -42,31 +41,24 @@ var rootCmd = &cobra.Command{
 		driver := viper.GetString("driver")
 		dsn := viper.GetString("dsn")
 
-		sugaredLogger := logger.NewZap()
+		logger.New()
 
-		defer func() {
-			err := sugaredLogger.Sync()
-			if err != nil {
-				sugaredLogger.Errorf("failed to sync logger: %v", err)
-			}
-		}()
-
-		otelzap.L().Info("starting Fivemanage application")
+		slog.Info("starting Fivemanage application")
 
 		otelShutdown, err := otel.SetupTracer()
 		if err != nil {
-			sugaredLogger.Fatalf("failed to setup OpenTelemetry: %v", err)
+			slog.Error("failed to setup OpenTelemetry", slog.Any("error", err))
 		}
 
 		defer func() {
-			sugaredLogger.Info("Attempting to shutdown OpenTelemetry...")
+			slog.Info("attempting to shutdown OpenTelemetry...")
 			otelCtx, otelCancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer otelCancel()
 
 			if shutdownErr := otelShutdown(otelCtx); shutdownErr != nil {
-				sugaredLogger.Errorf("failed to shutdown OpenTelemetry: %v", shutdownErr)
+				slog.Error("failed to shutdown OpenTelemetry", slog.Any("error", shutdownErr))
 			} else {
-				sugaredLogger.Info("OpenTelemetry shutdown successfully.")
+				slog.Info("OpenTelemetry shutdown successfully.")
 			}
 		}()
 
@@ -90,13 +82,17 @@ var rootCmd = &cobra.Command{
 		}
 
 		clickhouse.AutoMigrate(cmd.Context(), chConfig)
-
 		clickhouseClient := clickhouse.NewClient(chConfig)
 
 		kafkaC := kafkaqueue.NewConsumer(otelzap.L())
 		kafkaP := kafkaqueue.NewProducer(otelzap.L())
 
 		storageLayer := storage.New("s3")
+		// im not sure if we need to exit here.
+		// not all uers might want to use this for file uploads
+		if err := storageLayer.CreateBucket(cmd.Context()); err != nil {
+			slog.Warn("failed to create default bucket", slog.Any("error", err))
+		}
 
 		authService := auth.NewService(store)
 		tokenService := token.NewService(store)
@@ -127,7 +123,7 @@ var rootCmd = &cobra.Command{
 		// if not, create an admin user with the ADMIN_PASSWORD ENV
 		err = authService.CreateAdminUser()
 		if err != nil {
-			sugaredLogger.Error("failed to create admin user", zap.Error(err))
+			slog.Error("failed to create admin user", slog.Any("error", err))
 			return
 		}
 
@@ -139,34 +135,35 @@ var rootCmd = &cobra.Command{
 		go func() {
 			otelzap.S().Infof("Fivemanage is running on port %d", port)
 			if err := srv.ListenAndServe(); err != nil && err != nethttp.ErrServerClosed {
-				sugaredLogger.Fatalf("listen: %s\n", err)
+				slog.Error("listen", slog.Any("error", err))
+				os.Exit(1)
 			}
 		}()
 
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		<-quit
-		sugaredLogger.Info("Shutdown Server ...")
+		slog.Info("shutdown Server ...")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
 		if err := srv.Shutdown(ctx); err != nil {
-			sugaredLogger.Fatal("Server Shutdown:", err)
+			slog.Error("server shutdown", slog.Any("error", err))
+			os.Exit(1)
 		}
 
 		<-ctx.Done()
-		sugaredLogger.Info("timeout of 5 seconds.")
-		sugaredLogger.Info("Server exiting")
+		slog.Info("server exiting")
 	},
 }
 
 func init() {
-	logrus.Println("Initializing Fivemanage...")
+	slog.Info("initializing Fivemanage...")
 
 	err := godotenv.Load()
 	if err != nil {
-		logrus.Println("Error loading .env file. Probably becasue we're in production")
+		slog.Warn("Error loading .env file. Probably becasue we're in production", slog.Any("error", err))
 	}
 
 	rootCmd.PersistentFlags().String("driver", "pg", "Database driver")
@@ -224,6 +221,7 @@ func main() {
 
 func bindError(err error) {
 	if err != nil {
-		logrus.Fatal(err)
+		slog.Error("failed to bind env", slog.Any("error", err))
+		os.Exit(1)
 	}
 }

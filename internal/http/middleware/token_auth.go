@@ -8,8 +8,7 @@ import (
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 func TokenAuth(tokenService *token.Service, memcache *cache.Cache) echo.MiddlewareFunc {
@@ -32,7 +31,7 @@ func TokenAuth(tokenService *token.Service, memcache *cache.Cache) echo.Middlewa
 			if !found {
 				tokenData, err = tokenService.GetToken(ctx, token)
 				if err != nil {
-					otelzap.L().Error("failed to get token from service", zap.Error(err))
+					logrus.WithField("error", err).Error("failed to get token from service")
 					return c.JSON(401, echo.Map{
 						"error": "Unauthorized: Invalid token",
 					})
@@ -47,7 +46,7 @@ func TokenAuth(tokenService *token.Service, memcache *cache.Cache) echo.Middlewa
 
 			tokenData, ok := tokenCacheData.(*database.Token)
 			if !ok {
-				otelzap.L().Error("failed to assert token data from cache")
+				logrus.Error("failed to assert token data from cache")
 				return c.JSON(500, echo.Map{
 					"error": "Internal server error",
 				})

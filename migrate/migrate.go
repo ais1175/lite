@@ -7,6 +7,7 @@ import (
 
 	"github.com/fivemanage/lite/internal/database"
 	"github.com/fivemanage/lite/migrate/migrations"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/uptrace/bun"
@@ -139,5 +140,5 @@ func AutoMigrate(ctx context.Context, db *bun.DB) {
 		return
 	}
 
-	otelzap.S().Infof("migrated to %s", group)
+	logrus.Infof("migrated to %s", group)
 }

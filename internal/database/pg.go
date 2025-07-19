@@ -2,13 +2,12 @@ package database
 
 import (
 	"database/sql"
+	"log/slog"
 	"time"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.uber.org/zap"
 )
 
 type PostgreSQL struct{}
@@ -25,18 +24,18 @@ func (r *PostgreSQL) Connect(dsn string) *bun.DB {
 
 		err = sqldb.Ping()
 		if err == nil {
-			otelzap.L().Info("Successfully connected to the PostgreSQL database")
+			slog.Info("successfully connected to the PostgreSQL database")
 			break
 		}
 
-		otelzap.L().Warn("could not connect to the database", zap.Error(err))
-		otelzap.S().Warn("Could not connect to the database. Retrying in %v... (Attempt %d/%d)", retryWaitTime, i+1, maxRetries)
+		slog.Warn("could not connect to the database. Retrying in 5s...", slog.Any("error", err))
 
 		time.Sleep(retryWaitTime)
 
 		if i == maxRetries-1 {
-			otelzap.L().Fatal("Failed to connect to the database after multiple attempts", zap.Error(err))
+			slog.Error("failed to connect to the database after multiple attempts", slog.Any("error", err))
 		}
+
 	}
 
 	return bun.NewDB(sqldb, pgdialect.New())

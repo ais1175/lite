@@ -2,8 +2,7 @@ package clickhouse
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"log/slog"
 	"path/filepath"
 	"time"
 
@@ -24,12 +23,12 @@ func AutoMigrate(ctx context.Context, config *Config) {
 	defer func() {
 		err := db.Close()
 		if err != nil {
-			log.Fatalf("Error closing database: %v\n", err)
+			slog.Error("failed to close clickhouse connection", slog.Any("error", err))
 		}
 	}()
 
 	if err := db.PingContext(ctx); err != nil {
-		fmt.Println("Error pinging database:", err)
+		slog.Error("failed to ping clickhouse", slog.Any("error", err))
 		panic(err)
 	}
 
@@ -38,14 +37,14 @@ func AutoMigrate(ctx context.Context, config *Config) {
 		MultiStatementEnabled: true,
 	})
 	if err != nil {
-		fmt.Println("Error creating ClickHouse driver:", err)
+		slog.Error("failed to create clickhouse driver", slog.Any("error", err))
 		panic(err)
 	}
 
 	migrationsPath := filepath.Join(project.GetRoot(), "internal", "clickhouse", "migrations")
 	absPath, err := filepath.Abs(migrationsPath)
 	if err != nil {
-		fmt.Println("Error getting absolute path:", err)
+		slog.Error("failed to get absolute path", slog.Any("error", err))
 		panic(err)
 	}
 
@@ -54,15 +53,15 @@ func AutoMigrate(ctx context.Context, config *Config) {
 
 	m, err := migrate.NewWithDatabaseInstance(sourceURL, "default", driver)
 	if err != nil {
-		fmt.Println("Error creating migration instance:", err)
+		slog.Error("error creating migration instance", slog.Any("error", err))
 		panic(err)
 	}
 
 	err = m.Up()
 	if err != nil && err != migrate.ErrNoChange {
-		fmt.Println("Error running migrations:", err)
+		slog.Error("failed to run migrations", slog.Any("error", err))
 		panic(err)
 	}
 
-	fmt.Println("Migrations completed successfully.")
+	slog.Info("clickhouse migrations successfully completed")
 }

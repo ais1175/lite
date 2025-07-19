@@ -8,6 +8,7 @@ import (
 )
 
 type StorageLayer interface {
+	CreateBucket(context.Context) error
 	UploadFile(context.Context, io.Reader, string, string) error
 	DeleteFile() error
 }

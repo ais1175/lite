@@ -2,7 +2,9 @@ package http
 
 import (
 	"embed"
+	"fmt"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -17,7 +19,6 @@ import (
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	"github.com/go-playground/validator/v10"
@@ -46,7 +47,6 @@ func NewServer(
 
 	app.Use(otelecho.Middleware("lite-api"))
 	app.Use(middleware.Recover())
-	app.Use(middleware.Logger())
 	app.Use(middleware.CORS())
 	app.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
 
@@ -82,7 +82,7 @@ func getFileSystem(path string) http.FileSystem {
 		panic(err)
 	}
 
-	otelzap.S().Infof("Serving static files from %s", path)
+	slog.Info(fmt.Sprintf("serving static files from %s", path))
 
 	return http.FS(fs)
 }
