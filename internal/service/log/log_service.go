@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"maps"
 	"time"
 
 	"github.com/fivemanage/lite/api"
@@ -48,9 +49,7 @@ func (r *Service) SubmitLogs(ctx context.Context, organizationId string, dataset
 		metadata := make(map[string]string)
 
 		for k, v := range log.Metadata {
-			for key, value := range buildLogAttributes(k, v, 0) {
-				metadata[key] = value
-			}
+			maps.Copy(metadata, buildLogAttributes(k, v, 0))
 		}
 
 		// fix log message because it can be silly sometimes
@@ -66,7 +65,7 @@ func (r *Service) SubmitLogs(ctx context.Context, organizationId string, dataset
 			Timestamp:     timestamp,
 			TeamID:        organizationId,
 			DatasetID:     dataset.ID,
-			Body:          log.Message,
+			Body:          logMessage,
 			Attributes:    metadata,
 			RetentionDays: 30,
 		}

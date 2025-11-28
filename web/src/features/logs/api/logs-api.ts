@@ -31,8 +31,6 @@ export function useQueryLogs(
   organizationId: string | undefined,
   datasetId: string | undefined,
 ) {
-  console.log("org id", organizationId);
-
   return useMutation({
     mutationKey: [QueryKeys.Logs, organizationId, datasetId],
     mutationFn: async (params: ListLogsSchema) => {

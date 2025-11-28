@@ -169,10 +169,13 @@ func init() {
 	rootCmd.PersistentFlags().String("driver", "pg", "Database driver")
 	rootCmd.Flags().Int("port", 8080, "Port to serve Fivemanage")
 	rootCmd.Flags().String("dsn", "", "Database DSN")
+	// clickhouse
 	rootCmd.Flags().String("clickhouse-host", "localhost:9000", "Clickhouse host")
 	rootCmd.Flags().String("clickhouse-username", "default", "Clickhouse username")
 	rootCmd.Flags().String("clickhouse-password", "password", "Clickhouse password")
 	rootCmd.Flags().String("clickhouse-database", "default", "Clickhouse database")
+	// s3
+	rootCmd.Flags().String("s3-provider", "minio", "S3 provider")
 
 	// fuck me
 	if err := viper.BindPFlag("port", rootCmd.Flags().Lookup("port")); err != nil {
