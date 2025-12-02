@@ -84,9 +84,6 @@ var rootCmd = &cobra.Command{
 		clickhouse.AutoMigrate(cmd.Context(), chConfig)
 		clickhouseClient := clickhouse.NewClient(chConfig)
 
-		kafkaC := kafkaqueue.NewConsumer(otelzap.L())
-		kafkaP := kafkaqueue.NewProducer(otelzap.L())
-
 		storageLayer := storage.New("s3")
 		// im not sure if we need to exit here.
 		// not all uers might want to use this for file uploads
@@ -99,13 +96,7 @@ var rootCmd = &cobra.Command{
 		fileService := file.NewService(store, storageLayer)
 		organizationService := organization.NewService(store)
 		datsetService := dataset.NewService(store, clickhouseClient)
-		logService := log.NewService(store, kafkaP, clickhouseClient, datsetService)
-
-		worker := kafkaqueue.NewBatchWorker(clickhouseClient, kafkaC)
-
-		// kinda not sure what I want to do with this
-		// at some point we might actually want to run more than one worker
-		go worker.ProcessMessages()
+		logService := log.NewService(store, clickhouseClient, datsetService)
 
 		memcache := cache.NewMemcache(0)
 

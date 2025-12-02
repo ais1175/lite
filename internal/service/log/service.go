@@ -9,23 +9,22 @@ import (
 	"github.com/fivemanage/lite/internal/clickhouse"
 	"github.com/fivemanage/lite/internal/crypt"
 	"github.com/fivemanage/lite/internal/service/dataset"
-	"github.com/fivemanage/lite/pkg/kafkaqueue"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 )
 
 type Service struct {
-	db             *bun.DB
-	kafkaProducer  *kafkaqueue.Queue
-	datasetService *dataset.Service
+	db               *bun.DB
+	datasetService   *dataset.Service
+	clickhouseClient *clickhouse.Client
 }
 
-func NewService(db *bun.DB, kafkaProducer *kafkaqueue.Queue, clickhouseClient *clickhouse.Client, datasetService *dataset.Service) *Service {
+func NewService(db *bun.DB, clickhouseClient *clickhouse.Client, datasetService *dataset.Service) *Service {
 	return &Service{
-		db:             db,
-		kafkaProducer:  kafkaProducer,
-		datasetService: datasetService,
+		db:               db,
+		datasetService:   datasetService,
+		clickhouseClient: clickhouseClient,
 	}
 }
 
@@ -71,7 +70,7 @@ func (r *Service) SubmitLogs(ctx context.Context, organizationId string, dataset
 		}
 	}
 
-	err := r.kafkaProducer.Submit(ctx, clickhouseLogs)
+	err := r.clickhouseClient.BatchWriteLogRows(ctx, clickhouseLogs)
 	if err != nil {
 		otelzap.L().Error("failed to submit logs to kafka", zap.Error(err))
 	}
