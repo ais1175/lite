@@ -360,29 +360,32 @@ function InternalFilterBuilder(props: InternalFilterBuilderProps) {
     return isEditing ? null : (
       <div
         className={cn(
-          "flex items-center space-x-1 rounded-sm px-2 py-1 text-sm text-green-800 dark:text-green-100 shrink-0 bg-green-50 dark:bg-green-900",
+          "flex rounded-md h-7 text-sm text-green-800 dark:text-green-100 shrink-0 bg-green-50 dark:bg-green-900",
         )}
       >
-        <TooltipProvider>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger className="inline-flex" asChild>
-              <button
-                onClick={() => {
-                  onRemoveFilter(props.filter);
-                }}
-              >
-                <X size={14} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">
-              Remove {field} {operator} &quot;
-              {value}
-              &quot;
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex items-center justify-center px-1 cursor-pointer">
+          <TooltipProvider>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger className="inline-flex" asChild>
+                <button
+                  className="cursor-pointer"
+                  onClick={() => {
+                    onRemoveFilter(props.filter);
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                Remove {field} {operator} &quot;
+                {value}
+                &quot;
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <p
-          className="whitespace-nowrap text-xs cursor-pointer"
+          className="whitespace-nowrap text-xs cursor-pointer flex items-center px-1"
           onClick={() => {
             onFilterClick(props.filter);
           }}

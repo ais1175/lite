@@ -29,18 +29,18 @@ func NewService(db *bun.DB, clickhouseClient *clickhouse.Client, datasetService 
 }
 
 func (r *Service) SubmitLogs(ctx context.Context, organizationId string, datasetName string, logs []api.Log) {
-	clickhouseLogs := make([]*clickhouse.Log, len(logs))
+	clickhouseLogs := make([]*clickhouse.Log, 0)
 
-	for i, log := range logs {
+	dataset, err := r.datasetService.FindByName(ctx, organizationId, datasetName)
+	if err != nil {
+		otelzap.L().Error("failed to find dataset", zap.Error(err))
+		return
+	}
+
+	for _, log := range logs {
 		traceID, err := crypt.GeneratePrimaryKey()
 		if err != nil {
 			otelzap.L().Error("failed to generate trace id", zap.Error(err))
-			break
-		}
-
-		dataset, err := r.datasetService.FindByName(ctx, organizationId, datasetName)
-		if err != nil {
-			otelzap.L().Error("failed to find dataset", zap.Error(err))
 			break
 		}
 
@@ -59,7 +59,7 @@ func (r *Service) SubmitLogs(ctx context.Context, organizationId string, dataset
 		metadata["severity"] = log.Level
 		metadata["_resource"] = log.Resource
 
-		clickhouseLogs[i] = &clickhouse.Log{
+		clickhouseLogs = append(clickhouseLogs, &clickhouse.Log{
 			TraceID:       traceID,
 			Timestamp:     timestamp,
 			TeamID:        organizationId,
@@ -67,10 +67,10 @@ func (r *Service) SubmitLogs(ctx context.Context, organizationId string, dataset
 			Body:          logMessage,
 			Attributes:    metadata,
 			RetentionDays: 30,
-		}
+		})
 	}
 
-	err := r.clickhouseClient.BatchWriteLogRows(ctx, clickhouseLogs)
+	err = r.clickhouseClient.BatchWriteLogRows(ctx, clickhouseLogs)
 	if err != nil {
 		otelzap.L().Error("failed to submit logs to kafka", zap.Error(err))
 	}

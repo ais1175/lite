@@ -21,7 +21,6 @@ import (
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/migrate"
 	"github.com/fivemanage/lite/pkg/cache"
-	"github.com/fivemanage/lite/pkg/kafkaqueue"
 	"github.com/fivemanage/lite/pkg/logger"
 	"github.com/fivemanage/lite/pkg/otel"
 	"github.com/fivemanage/lite/pkg/storage"

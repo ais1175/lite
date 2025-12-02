@@ -53,6 +53,16 @@ func (r *Service) Create(ctx context.Context, orgID string, data api.Dataset) (*
 	return &data, nil
 }
 
+func (r *Service) GetLog(ctx context.Context, organizationID, datasetID, logID string) (*api.DatasetLog, error) {
+	fmt.Println(organizationID, datasetID, logID)
+	log, err := r.ch.QueryLog(ctx, organizationID, datasetID, logID)
+	if err != nil {
+		return nil, err
+	}
+
+	return log, nil
+}
+
 func (r *Service) List(ctx context.Context, organizationID string) ([]api.Dataset, error) {
 	var datasets []api.Dataset
 

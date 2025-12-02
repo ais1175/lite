@@ -3,12 +3,11 @@
 import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import {
   Cell,
-  //type CellContext,
+  type CellContext,
   type ColumnDef,
   type ColumnSizingState,
-  type Row,
-  type RowSelectionState,
   Header,
+  type Row,
   VisibilityState,
   flexRender,
   getCoreRowModel,
@@ -26,38 +25,43 @@ import React, {
   useState,
 } from "react";
 
+import { _LEVELS } from "@/lib/constants/level";
 import { getLevelRowClassName } from "@/lib/logs/level";
 import { cn } from "@/lib/utils";
-import { QueryBuilder } from "../search/query-builder";
-//import { StarredSearchDrawer } from "./Search/StarredSearchDrawer";
-import { LogsFilter } from "./logs-filter";
-import { LogsTableProvider } from "../../providers/logs-table-provider";
+import { type RowSelectionState } from "@tanstack/react-table";
+import { LogsFilterWrapper } from "./logs-filter-wrapper";
+import { LogsTableColumnTimestamp } from "./table-hover-card-timestamp";
 import { TableColumnLevelIndicator } from "./table-level-indicator";
 
-//import { useDatasetSettings } from "@/hooks/use-dataset-settings";
 import { ArrowLeftFromLine, ArrowRightFromLine } from "lucide-react";
-//import { DatasetSelect } from "../[datasetId]/_components/dataset-select";
+import { getDatetimeQuery } from "../../utils/datetime";
+//import MemoizedColumnSettingsMenu from "./ColumnSettingsMenu";
 import { RawDataCell } from "./raw-data-cell";
 import { MemoTableBodyRow, TableBodyRow } from "./table-body-row";
-//import { TraceDataSheet } from "./trace-data-sheet";
-import { Field } from "@/typings/logs";
+import { LogDataSheet } from "./log-data-sheet";
 import { useParams, useSearchParams } from "react-router";
-import { type Log } from "@/typings/logs";
-import { _LEVELS } from "@/lib/constants/level";
-import { VALID_INTERVALS } from "@/lib/constants/interval";
-import { useCustomColumns } from "../../hooks/use-custom-columns";
-import { LogsTableColumnTimestamp } from "./table-hover-card-timestamp";
 import { useQueryLogs } from "../../api/logs-api";
+import { LogsTableProvider } from "../../providers/logs-table-provider";
+import { VALID_INTERVALS } from "@/lib/constants/interval";
+import { QueryBuilder } from "../search/query-builder";
+//import { StarredSearchDrawer } from "../search/starred-search/starred-search-drawer";
+import { DatasetSelect } from "./dataset-select";
+import { useSidebarControls } from "../../hooks/use-sidebar-controls";
+import { useCustomColumns } from "../../hooks/use-custom-columns";
+import { Field, Log } from "@/typings/logs";
+import { useDatasetSettings } from "../../hooks/use-dataset-settings";
+import { SimpleQueryBuilder } from "../search/simple-query-builder";
+import { LogsSidebarControls } from "../sidebar-controls";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-//const MAX_COL_WIDTH = 2_000;
-//const DEFAULT_COL_WIDTH = 150;
+const MAX_COL_WIDTH = 2_000;
+const DEFAULT_COL_WIDTH = 150;
 
 interface LogsTableProps {
-  organizationId: string | undefined;
-  datasetId: string | undefined;
+  teamId: string;
+  datasetId: string;
   levels: string[] | null | undefined;
   defaultRowSelection?: RowSelectionState;
   defaultColumnSizing?: ColumnSizingState;
@@ -72,7 +76,7 @@ function findCustomColumns(
 }
 
 export function LogsTable({
-  organizationId,
+  teamId,
   datasetId,
   levels,
   fields,
@@ -80,9 +84,9 @@ export function LogsTable({
   defaultColumnSizing,
   defaultColumnVisibility,
 }: LogsTableProps) {
-  const [containerWidth, setContainerWidth] = useState(1200);
-  const [hasActualWidth, setHasActualWidth] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const { columns: customColumns, updateColumnWidth } = useCustomColumns();
+  const tableRef = useRef<HTMLTableElement>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>(
     defaultRowSelection ?? {},
   );
@@ -92,54 +96,71 @@ export function LogsTable({
   const [columnSizing, setColumnSizing] = useState<
     ColumnSizingState | undefined
   >(defaultColumnSizing ?? {});
+  //const [isShowingControls, setIsShowingControls] = useState(true);
 
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const tableRef = useRef<HTMLTableElement>(null);
+  const {
+    sidebarControls: { showSidebarControls },
+  } = useSidebarControls();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const params = useParams();
+  const params = useParams<{ organizationId: string; datasetId: string }>();
+
+  const { mutateAsync } = useQueryLogs(
+    params.organizationId as string,
+    params.datasetId as string,
+  );
 
   const selectedLevels = searchParams.get("level")!;
   const fromDate = searchParams.get("from")!;
   const toDate = searchParams.get("to")!;
+  const quickRange = searchParams.get("qr");
   const metadata = searchParams.get("metadata")!;
+  const message = searchParams.get("message")!;
   const filter = searchParams.get("filter")!;
+  const queryMode = searchParams.get("queryMode")!;
 
-  //const { toggleRawData } = useDatasetSettings();
-  const { columns: customColumns, updateColumnWidth } = useCustomColumns();
+  const [containerWidth, setContainerWidth] = useState(1200);
+  const [hasActualWidth, setHasActualWidth] = useState(false);
 
-  const { mutateAsync } = useQueryLogs(organizationId, datasetId);
+  const { toggleRawData } = useDatasetSettings();
 
-  /*const getCustomColumns = useMemo(
+  const getCustomColumns = useMemo(
     () =>
-      (isHydrated ? customColumns : []).map((column): ColumnDef<Log> => {
-        return {
-          id: column.name,
-          accessorKey: column.name,
-          enableResizing: true,
-          size: column.width,
-          maxSize: MAX_COL_WIDTH,
-          minSize: DEFAULT_COL_WIDTH,
-          header: () => {
-            return <MemoizedColumnSettingsMenu columnName={column.name} />;
-          },
-          cell: (value: CellContext<Log, unknown>) => {
-            const metadata = value.row.original.Metadata as unknown as Record<
-              string,
-              string
-            >;
-            const columnValue = metadata?.[column.name] ?? "<nil>";
+      (customColumns[datasetId] ? customColumns[datasetId] : []).map(
+        (column): ColumnDef<Log> => {
+          return {
+            id: column.name,
+            accessorKey: column.name,
+            enableResizing: true,
+            size: column.width,
+            maxSize: MAX_COL_WIDTH,
+            minSize: DEFAULT_COL_WIDTH,
+            /*header: () => {
+              return (
+                <MemoizedColumnSettingsMenu
+                  columnName={column.name}
+                  datasetId={datasetId}
+                />
+              );
+            }, */
+            cell: (value: CellContext<Log, unknown>) => {
+              const metadata = value.row.original.Metadata as unknown as Record<
+                string,
+                string
+              >;
+              const columnValue = metadata?.[column.name] ?? "<nil>";
 
-            return (
-              <div className="text-xs font-logs font-normal text-logs-text break-words text-wrap">
-                {columnValue}
-              </div>
-            );
-          },
-        };
-      }),
-    [isHydrated, customColumns],
-  ); */
+              return (
+                <div className="text-xs font-logs font-normal text-logs-text break-words text-wrap">
+                  {columnValue}
+                </div>
+              );
+            },
+          };
+        },
+      ),
+    [customColumns, datasetId],
+  );
 
   const toogleRawDataColumn = useCallback(() => {
     setColumnVisibility((prev) => {
@@ -148,8 +169,8 @@ export function LogsTable({
         data: !prev.data,
       };
     });
-    //toggleRawData();
-  }, [setColumnVisibility]);
+    toggleRawData();
+  }, [setColumnVisibility, toggleRawData]);
 
   const columns: ColumnDef<Log>[] = useMemo(
     () => [
@@ -158,11 +179,10 @@ export function LogsTable({
         id: "level",
         header: "",
         cell: ({ row }) => {
-          const severity =
-            (row.original?.Metadata["severity"] as (typeof _LEVELS)[number]) ??
-            "info";
-
-          return <TableColumnLevelIndicator value={severity} />;
+          const level = row.original.Metadata[
+            "severity"
+          ] as (typeof _LEVELS)[number];
+          return <TableColumnLevelIndicator value={level} />;
         },
         size: 40,
         minSize: 40,
@@ -183,7 +203,7 @@ export function LogsTable({
         minSize: 180,
         maxSize: 180,
       },
-      //...getCustomColumns,
+      ...getCustomColumns,
       {
         header: () => {
           return (
@@ -205,14 +225,14 @@ export function LogsTable({
         minSize: 0,
       },
     ],
-    [toogleRawDataColumn],
+    [getCustomColumns, toogleRawDataColumn],
   );
 
   const handleOpenLog = (logId: string) => {
     if (!searchParams) return;
     const params = new URLSearchParams(searchParams);
-    params.set("logId", logId);
 
+    params.set("logId", logId);
     setSearchParams(params);
   };
 
@@ -222,18 +242,31 @@ export function LogsTable({
   }
 
   const { data, fetchNextPage, isFetching } = useInfiniteQuery({
-    queryKey: ["logs", selectedLevels, fromDate, toDate, metadata, filter],
+    queryKey: [
+      "logs",
+      selectedLevels,
+      fromDate,
+      toDate,
+      metadata,
+      message,
+      filter,
+      quickRange,
+    ],
     enabled: true,
     queryFn: async ({ pageParam = 0 }) => {
+      const date = getDatetimeQuery(quickRange, fromDate, toDate);
+
       const data = await mutateAsync({
-        organizationId: params.teamId as string,
+        organizationId: params.organizationId as string,
         datasetId: params.datasetId as string,
         metadata: metadata,
-        fromDate: fromDate,
-        toDate: toDate,
+        fromDate: date?.from ?? new Date().toUTCString(),
+        toDate: date?.to ?? new Date().toUTCString(),
         levels: selectedLevels,
+        logMessage: message,
         filter: filter,
         cursor: pageParam,
+        queryMode: queryMode,
       });
 
       return data;
@@ -272,8 +305,9 @@ export function LogsTable({
   );
 
   function getRowClassName(row: Row<Log>) {
-    const severity = row.original?.Metadata["severity"] ?? "info";
-    return getLevelRowClassName(severity as (typeof _LEVELS)[number]);
+    return getLevelRowClassName(
+      row.original.Metadata.severity as (typeof _LEVELS)[number],
+    );
   }
 
   const handleTableColumnSizing = React.useCallback(
@@ -343,10 +377,6 @@ export function LogsTable({
   }, [table.getState().columnSizingInfo, table.getState().columnSizing]);
 
   useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  useEffect(() => {
     const container = tableContainerRef.current;
     if (!container) return;
 
@@ -369,10 +399,26 @@ export function LogsTable({
     };
   }, []);
 
+  // Force recalculation when sidebar toggles
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    // Use setTimeout to ensure the container has finished resizing
+    const timeoutId = setTimeout(() => {
+      if (container.clientWidth > 0) {
+        setContainerWidth(container.clientWidth);
+        setHasActualWidth(true);
+      }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [showSidebarControls]);
+
   // now this is....really really fucked up, lord forgive me
   // this updates local storage with the column sizes for custom columns
   useEffect(() => {
-    if (!columnSizing || !isHydrated) return;
+    if (!columnSizing) return;
 
     const headers = table.getFlatHeaders();
     const customHeaders = headers.filter(
@@ -390,11 +436,13 @@ export function LogsTable({
           return;
         }
 
-        const existingColumn = customColumns.find(
+        if (!customColumns[datasetId]) return;
+
+        const existingColumn = customColumns[datasetId].find(
           (col) => col.name === columnId,
         );
         if (existingColumn && existingColumn.width !== width) {
-          updateColumnWidth({
+          updateColumnWidth(datasetId, {
             ...existingColumn,
             width: width,
           });
@@ -412,9 +460,9 @@ export function LogsTable({
     columnSizing,
     customColumns,
     updateColumnWidth,
-    isHydrated,
     table,
     columnVisibility.data,
+    datasetId,
   ]);
 
   // this just keeps track of the column sizes and updates the table
@@ -439,7 +487,6 @@ export function LogsTable({
       lastCustomColumnId = customHeaders[customHeaders.length - 1]!.id;
     }
 
-    // fuuuuuuuuuck
     headers.forEach((header) => {
       if (header.id === "level" || header.id === "timestamp") {
         fixedWidth += header.getSize();
@@ -516,147 +563,36 @@ export function LogsTable({
       columns={columns}
       rowSelection={rowSelection}
     >
-      <div className="h-full w-full flex flex-col">
-        <div
-          className={cn(
-            "flex flex-col gap-4 bg-background p-2",
-            "sticky top-0 z-10",
-          )}
-        >
-          {/*<QueryModeSwitcher />*/}
-          <div>
-            <div className="flex flex-row items-center gap-2">
-              {/*<DatasetSelect teamId={teamId} />*/}
-              <QueryBuilder fields={fields} />
-              {/*<StarredSearchDrawer />*/}
+      <div className="flex h-full">
+        {showSidebarControls && <LogsSidebarControls levels={levels} />}
+        <div className="h-full w-full flex flex-col min-w-0">
+          <div
+            className={cn(
+              "flex flex-col gap-2 bg-background p-2",
+              "sticky top-0 z-10",
+            )}
+          >
+            <LogsFilterWrapper />
+            <div>
+              {queryMode == "simple" ? (
+                <div className="flex flex-row items-center gap-2">
+                  <DatasetSelect teamId={teamId} />
+                  <div className="flex-1">
+                    <SimpleQueryBuilder />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-row items-center gap-2">
+                  <DatasetSelect teamId={teamId} />
+                  <QueryBuilder fields={fields} />
+                  {/*<StarredSearchDrawer /> */}
+                </div>
+              )}
             </div>
           </div>
-          <LogsFilter organizationId={organizationId} levels={levels} />
-        </div>
-        <div className="flex-1 border border-border w-full relative overflow-hidden">
-          <div className="sticky top-0 z-20 bg-background border-b border-border">
-            <table
-              className="w-full"
-              style={{
-                ...columnSizeVars,
-                width: "100%",
-                display: "grid",
-              }}
-            >
-              <thead
-                style={{
-                  display: "grid",
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 1,
-                }}
-              >
-                {table.getHeaderGroups().map((headerGroup) => {
-                  return (
-                    <tr
-                      key={headerGroup.id}
-                      style={{ display: "flex", width: "100%" }}
-                      className="hover:bg-transparent bg-background"
-                    >
-                      {headerGroup.headers.map((header) => {
-                        const headers = headerGroup.headers;
-                        const customColumns = findCustomColumns(headers);
-                        const lastCustomColumn =
-                          customColumns[customColumns.length - 1];
-                        const isLastColumn = lastCustomColumn?.id === header.id;
-                        // this is so fucked up
-                        // i need to find a better way to do this
-                        const shouldFlex =
-                          (header.id === "data" && columnVisibility.data) ||
-                          (isLastColumn && !columnVisibility.data);
-
-                        return (
-                          <th
-                            key={header.id}
-                            style={{
-                              display: "flex",
-                              width: shouldFlex ? "auto" : header.getSize(),
-                              minWidth: shouldFlex ? "200px" : header.getSize(),
-                              ...(shouldFlex
-                                ? { flex: "1 1 auto" }
-                                : { maxWidth: header.getSize() }),
-                            }}
-                            className={cn(
-                              "relative px-3 py-2 text-xs font-medium text-muted-foreground bg-background",
-                              "[&:not(:last-child)]:border-r border-border",
-                            )}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                {header.isPlaceholder
-                                  ? null
-                                  : flexRender(
-                                      header.column.columnDef.header,
-                                      header.getContext(),
-                                    )}
-
-                                {header.column.getCanResize() && (
-                                  <div
-                                    onDoubleClick={() =>
-                                      header.column.resetSize()
-                                    }
-                                    onMouseDown={header.getResizeHandler()}
-                                    onTouchStart={header.getResizeHandler()}
-                                    className={cn(
-                                      "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/50 z-10",
-                                      header.column.getIsResizing() &&
-                                        "bg-blue-500",
-                                    )}
-                                    style={{
-                                      transform: `translateX(${
-                                        (table.options.columnResizeDirection ===
-                                        "rtl"
-                                          ? -1
-                                          : 1) *
-                                        (table.getState().columnSizingInfo
-                                          .deltaOffset ?? 0)
-                                      }px)`,
-                                    }}
-                                  />
-                                )}
-                              </div>
-                              {shouldFlex && isLastColumn && (
-                                <div className="absolute right-2">
-                                  <ArrowLeftFromLine
-                                    className="w-4 h-4"
-                                    onClick={toogleRawDataColumn}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </th>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </thead>
-            </table>
-          </div>
-
-          <div
-            ref={tableContainerRef}
-            className="flex-1 overflow-auto"
-            onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
-            style={{
-              height: "calc(100% - 41px)",
-            }}
-          >
-            <div
-              style={{
-                height: `${rowVirtualizer.getTotalSize()}px`,
-                width: "100%",
-                position: "relative",
-              }}
-            >
-              {/* why I am wrapping a table in a table? it worked, its just really bad */}
+          <div className="flex-1 border border-border w-full relative overflow-hidden">
+            <div className="sticky top-0 z-20 bg-background border-b border-border">
               <table
-                ref={tableRef}
                 className="w-full"
                 style={{
                   ...columnSizeVars,
@@ -664,65 +600,168 @@ export function LogsTable({
                   display: "grid",
                 }}
               >
-                <tbody
+                <thead
                   style={{
                     display: "grid",
-                    height: `${rowVirtualizer.getTotalSize()}px`,
-                    position: "relative",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 1,
                   }}
                 >
-                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                    const row = rows[virtualRow.index] as Row<Log>;
-
+                  {table.getHeaderGroups().map((headerGroup) => {
                     return (
-                      <React.Fragment key={row.id}>
-                        {table.getState().columnSizingInfo.isResizingColumn ? (
-                          <MemoTableBodyRow
-                            table={table}
-                            row={row}
-                            virtualRow={virtualRow}
-                            rowVirtualizer={rowVirtualizer}
-                            handleOpenLog={handleOpenLog}
-                            columnVisibility={columnVisibility}
-                          />
-                        ) : (
-                          <TableBodyRow
-                            table={table}
-                            row={row}
-                            virtualRow={virtualRow}
-                            rowVirtualizer={rowVirtualizer}
-                            handleOpenLog={handleOpenLog}
-                            columnVisibility={columnVisibility}
-                          />
-                        )}
-                      </React.Fragment>
+                      <tr
+                        key={headerGroup.id}
+                        style={{ display: "flex", width: "100%" }}
+                        className="hover:bg-transparent bg-background"
+                      >
+                        {headerGroup.headers.map((header) => {
+                          const headers = headerGroup.headers;
+                          const customColumns = findCustomColumns(headers);
+                          const lastCustomColumn =
+                            customColumns[customColumns.length - 1];
+                          const isLastColumn =
+                            lastCustomColumn?.id === header.id;
+                          // this is so fucked up
+                          // i need to find a better way to do this
+                          const shouldFlex =
+                            (header.id === "data" && columnVisibility.data) ||
+                            (isLastColumn && !columnVisibility.data);
+
+                          return (
+                            <th
+                              key={header.id}
+                              style={{
+                                display: "flex",
+                                width: shouldFlex ? "auto" : header.getSize(),
+                                minWidth: shouldFlex
+                                  ? "200px"
+                                  : header.getSize(),
+                                ...(shouldFlex
+                                  ? { flex: "1 1 auto" }
+                                  : { maxWidth: header.getSize() }),
+                              }}
+                              className={cn(
+                                "relative px-3 py-2 text-xs font-medium text-muted-foreground bg-background",
+                                "[&:not(:last-child)]:border-r border-border",
+                              )}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  {header.isPlaceholder
+                                    ? null
+                                    : flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext(),
+                                      )}
+
+                                  {header.column.getCanResize() && (
+                                    <div
+                                      onDoubleClick={() =>
+                                        header.column.resetSize()
+                                      }
+                                      onMouseDown={header.getResizeHandler()}
+                                      onTouchStart={header.getResizeHandler()}
+                                      className={cn(
+                                        "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/50 z-10",
+                                        header.column.getIsResizing() &&
+                                          "bg-blue-500",
+                                      )}
+                                      style={{
+                                        transform: `translateX(${
+                                          (table.options
+                                            .columnResizeDirection === "rtl"
+                                            ? -1
+                                            : 1) *
+                                          (table.getState().columnSizingInfo
+                                            .deltaOffset ?? 0)
+                                        }px)`,
+                                      }}
+                                    />
+                                  )}
+                                </div>
+                                {shouldFlex && isLastColumn && (
+                                  <div className="absolute right-2">
+                                    <ArrowLeftFromLine
+                                      className="w-4 h-4"
+                                      onClick={toogleRawDataColumn}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </th>
+                          );
+                        })}
+                      </tr>
                     );
                   })}
-                </tbody>
+                </thead>
               </table>
+            </div>
 
-              {isFetching && (
-                <div
+            <div
+              ref={tableContainerRef}
+              className="flex-1 overflow-auto"
+              onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+              style={{
+                height: "calc(100% - 41px)",
+              }}
+            >
+              <div
+                style={{
+                  height: `${rowVirtualizer.getTotalSize()}px`,
+                  width: "100%",
+                  position: "relative",
+                }}
+              >
+                <table
+                  ref={tableRef}
+                  className="w-full"
                   style={{
-                    position: "absolute",
-                    top: `${rowVirtualizer.getTotalSize()}px`,
-                    left: 0,
+                    ...columnSizeVars,
                     width: "100%",
-                    height: "64px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "14px",
-                    color: "var(--muted-foreground)",
+                    display: "grid",
                   }}
                 >
-                  Loading more logs...
-                </div>
-              )}
+                  <tbody
+                    style={{
+                      display: "grid",
+                      height: `${rowVirtualizer.getTotalSize()}px`,
+                      position: "relative",
+                    }}
+                  >
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                      const row = rows[virtualRow.index] as Row<Log>;
 
-              {!isFetching &&
-                totalFetched >= totalDBRowCount &&
-                totalFetched > 0 && (
+                      return (
+                        <React.Fragment key={row.id}>
+                          {table.getState().columnSizingInfo
+                            .isResizingColumn ? (
+                            <MemoTableBodyRow
+                              table={table}
+                              row={row}
+                              virtualRow={virtualRow}
+                              rowVirtualizer={rowVirtualizer}
+                              handleOpenLog={handleOpenLog}
+                              columnVisibility={columnVisibility}
+                            />
+                          ) : (
+                            <TableBodyRow
+                              table={table}
+                              row={row}
+                              virtualRow={virtualRow}
+                              rowVirtualizer={rowVirtualizer}
+                              handleOpenLog={handleOpenLog}
+                              columnVisibility={columnVisibility}
+                            />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {isFetching && (
                   <div
                     style={{
                       position: "absolute",
@@ -737,45 +776,67 @@ export function LogsTable({
                       color: "var(--muted-foreground)",
                     }}
                   >
-                    All logs loaded ({totalFetched} of {totalDBRowCount})
+                    Loading more logs...
                   </div>
                 )}
 
-              {!isFetching && flatData.length === 0 && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "128px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "14px",
-                    color: "var(--muted-foreground)",
-                  }}
-                >
-                  No logs found
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                {!isFetching &&
+                  totalFetched >= totalDBRowCount &&
+                  totalFetched > 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: `${rowVirtualizer.getTotalSize()}px`,
+                        left: 0,
+                        width: "100%",
+                        height: "64px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "14px",
+                        color: "var(--muted-foreground)",
+                      }}
+                    >
+                      All logs loaded ({totalFetched} of {totalDBRowCount})
+                    </div>
+                  )}
 
-        <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/50 text-xs text-muted-foreground">
-          <div>
-            Showing {totalFetched} of {totalDBRowCount} logs
-          </div>
-          {isFetching && (
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" />
-              Loading...
+                {!isFetching && flatData.length === 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "128px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "14px",
+                      color: "var(--muted-foreground)",
+                    }}
+                  >
+                    No logs found
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          </div>
+
+          <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/50 text-xs text-muted-foreground">
+            <div>
+              Showing {totalFetched} of {totalDBRowCount} logs
+            </div>
+            {isFetching && (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" />
+                Loading...
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      {/*<TraceDataSheet />*/}
+      <LogDataSheet />
     </LogsTableProvider>
   );
 }

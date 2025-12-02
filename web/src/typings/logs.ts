@@ -68,6 +68,8 @@ export const listLogsSchema = z.object({
   metadata: z.union([z.string(), z.array(z.string())]).nullable(),
   filter: z.string().nullable(),
   cursor: z.number().nullish(),
+  logMessage: z.string().nullish(),
+  queryMode: z.string().nullish(),
 });
 
 export type ListLogsSchema = z.infer<typeof listLogsSchema>;

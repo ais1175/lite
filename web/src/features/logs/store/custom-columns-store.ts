@@ -1,15 +1,22 @@
 import { atomWithStorage } from "jotai/utils";
 
-const LS_CUSTOM_COLUMNS_KEY = "customLogsColumns";
+const LS_CUSTOM_COLUMNS_KEY = "customDatasetColumns";
 
 export interface CustomColumn {
   name: string;
   width: number;
 }
 
-export const customColumnsAtom = atomWithStorage<CustomColumn[]>(
+export interface CustomColumnsStorage {
+  [key: string]: {
+    name: string;
+    width: number;
+  }[];
+}
+
+export const customColumnsAtom = atomWithStorage<CustomColumnsStorage>(
   LS_CUSTOM_COLUMNS_KEY,
-  [],
+  {},
   {
     getItem(key) {
       const item = window.localStorage.getItem(key);

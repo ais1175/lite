@@ -78,4 +78,18 @@ func registerDatasetApi(group *echo.Group, datasetService *dataset.Service) {
 
 		return c.JSON(200, httputil.Response(response))
 	})
+
+	group.GET("/:organizationId/dataset/:datasetId/logs/:logId", func(c echo.Context) error {
+		ctx := c.Request().Context()
+		orgID := c.Param("organizationId")
+		datasetID := c.Param("datasetId")
+		logID := c.Param("logId")
+
+		log, err := datasetService.GetLog(ctx, orgID, datasetID, logID)
+		if err != nil {
+			return echo.NewHTTPError(500, httputil.ErrorResponse(err.Error()))
+		}
+
+		return c.JSON(200, httputil.Response(log))
+	})
 }

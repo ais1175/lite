@@ -1,4 +1,4 @@
-import { Field, QueryLogResponse } from "@/typings/logs";
+import { Field, Log, QueryLogResponse } from "@/typings/logs";
 import { ListLogsSchema } from "@/typings/logs";
 import { QueryKeys } from "@/typings/query";
 import { ApiError, fetchApi } from "@/utils/http-util";
@@ -40,6 +40,31 @@ export function useQueryLogs(
           {
             method: "POST",
             body: JSON.stringify(params),
+          },
+        );
+      } catch (err) {
+        if (err instanceof ApiError) {
+          throw new Error(err.message);
+        }
+      }
+    },
+  });
+}
+
+export function useLog(
+  organizationId: string | undefined,
+  datasetId: string | undefined,
+  logId: string | null,
+) {
+  return useQuery({
+    queryKey: [QueryKeys.Logs, organizationId, datasetId, logId],
+    enabled: !!logId,
+    queryFn: async ({ signal }) => {
+      try {
+        return await fetchApi<Log>(
+          `/api/dash/${organizationId}/dataset/${datasetId}/logs/${logId}`,
+          {
+            signal,
           },
         );
       } catch (err) {

@@ -88,7 +88,7 @@ export function QueryBuilder({ fields }: QueryBuilderProps) {
         <div
           className={cn(
             "flex items-center gap-2 w-full rounded-md relative",
-            "border border-input ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring px-1",
+            "border border-input ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring py-1",
           )}
         >
           <div className="overflow-x-auto w-full">
@@ -107,7 +107,7 @@ export function QueryBuilder({ fields }: QueryBuilderProps) {
               />
             )}
           </div>
-          <span className="border border-right h-full" />
+          {/*<span className="border border-right h-full" />*/}
           {/*<StarSearchPopover query={filter} />*/}
         </div>
       </div>

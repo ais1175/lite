@@ -97,6 +97,7 @@ func (c *Client) BatchWriteLogRows(ctx context.Context, logs []*Log) error {
 
 	batch, err := c.conn.PrepareBatch(ctx, "INSERT INTO logs (Timestamp, DatasetId, TraceId, TeamId, Body, Attributes, RetentionDays)")
 	if err != nil {
+		fmt.Println("failed to prepare batch", err.Error())
 		return fmt.Errorf("failed to prepare batch: %w", err)
 	}
 
@@ -111,6 +112,7 @@ func (c *Client) BatchWriteLogRows(ctx context.Context, logs []*Log) error {
 			log.RetentionDays,
 		)
 		if err != nil {
+			fmt.Println("failed to append log to batch", err.Error())
 			return fmt.Errorf("failed to append log to batch: %w", err)
 		}
 	}

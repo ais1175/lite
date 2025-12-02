@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { Log } from "@/typings/logs";
 import {
   type Row,
   type Table as TTable,
@@ -9,6 +8,7 @@ import {
 import { VirtualItem, Virtualizer } from "@tanstack/react-virtual";
 import { memo } from "react";
 import { findCustomColumns } from "./utils";
+import { Log } from "@/typings/logs";
 
 interface TableBodyRowProps {
   table: TTable<Log>;

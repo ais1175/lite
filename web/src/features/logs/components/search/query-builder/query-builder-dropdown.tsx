@@ -37,16 +37,6 @@ function formatGroupClause(groupClause: string | null) {
   return `${groupClause?.toUpperCase()}(...)`;
 }
 
-function getClauseColor(groupClause: string | null) {
-  if (groupClause === "and") {
-    return "text-green-500 hover:text-green-500";
-  } else if (groupClause === "or") {
-    return "text-orange-500 active:text-orange-500 hover:text-orange-500";
-  }
-
-  return "text-muted-foreground";
-}
-
 export function QueryBuilderDropdown({
   metadataKeys,
   hasFilter,
@@ -168,11 +158,21 @@ export function QueryBuilderDropdown({
         <button
           className={cn(
             "text-muted-foreground text-sm",
-            !hasFilter ? "text-left w-full" : "border rounded-md p-0.5",
+            !hasFilter
+              ? "text-left w-full px-2 cursor-pointer"
+              : "rounded-md p-0.5 cursor-pointer ",
+            isRoot && hasFilter && "border hover:bg-accent",
           )}
         >
           {hasFilter ? (
-            <Plus size={18} className="text-foreground" />
+            <Plus
+              size={18}
+              className={cn(
+                isRoot
+                  ? "text-foreground"
+                  : "text-green-800 dark:text-green-100",
+              )}
+            />
           ) : (
             "Click to add filter..."
           )}
@@ -200,7 +200,6 @@ export function QueryBuilderDropdown({
                     size="sm"
                     variant="outline"
                     value={clause}
-                    className={cn(getClauseColor(clause))}
                   >
                     {formatGroupClause(clause)}
                   </ToggleGroupItem>

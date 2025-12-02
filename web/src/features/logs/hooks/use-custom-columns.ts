@@ -5,31 +5,49 @@ import {
   customColumnsAtom,
   rawDataColumnAtom,
   rawDataColumnWidthAtom,
-} from "../store/custom-columns-store";
+} from "../store/custom-columns-store.ts";
 import { useCallback } from "react";
 
 export const useCustomColumns = () => {
   const [customColumns, setCustomColumns] = useAtom(customColumnsAtom);
 
   const addColumn = useCallback(
-    (column: CustomColumn) => {
+    (datasetId: string, column: CustomColumn) => {
       setCustomColumns((prev) => {
-        if (prev.some((c) => c.name === column.name)) return prev;
-        return [...prev, column];
+        return {
+          ...prev,
+          [datasetId]: [...(prev[datasetId] ?? []), column],
+        };
       });
     },
     [setCustomColumns],
   );
 
-  const removeColumn = (columnName: string) => {
-    setCustomColumns((prev) => prev.filter((c) => c.name !== columnName));
+  const removeColumn = (datasetId: string, columnName: string) => {
+    setCustomColumns((prev) => {
+      if (!prev[datasetId]) return prev;
+
+      const newColumns =
+        prev[datasetId]?.filter((c) => c.name !== columnName) ?? [];
+      return {
+        ...prev,
+        [datasetId]: newColumns,
+      };
+    });
   };
 
   const updateColumnWidth = useCallback(
-    (column: CustomColumn) => {
-      setCustomColumns((prev) =>
-        prev.map((c) => (c.name === column.name ? column : c)),
-      );
+    (datasetId: string, column: CustomColumn) => {
+      setCustomColumns((prev) => {
+        if (!prev[datasetId]) return prev;
+
+        return {
+          ...prev,
+          [datasetId]: prev[datasetId]?.map((c) =>
+            c.name === column.name ? column : c,
+          ),
+        };
+      });
     },
     [setCustomColumns],
   );
@@ -59,10 +77,6 @@ export const useRawDataColumnWidth = () => {
   const [rawDataColumnWidth, setRawDataColumnWidth] = useAtom(
     rawDataColumnWidthAtom,
   );
-
-  /*const updateRawDataColumnWidth = (width: number) => {
-    setRawDataColumnWidth(width);
-  }; */
 
   const updateRawDataColumnWidth = useCallback(
     (width: number) => {
