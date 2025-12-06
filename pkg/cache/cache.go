@@ -16,7 +16,7 @@ type Item struct {
 
 type memcache struct {
 	items             map[string]Item
-	defaultExpiration int64
+	defaultExpiration time.Duration
 	mutex             sync.Mutex
 }
 
@@ -29,7 +29,7 @@ type mop struct {
 	stop     chan bool
 }
 
-func NewMemcache(defaultExpiration int64) *Cache {
+func NewMemcache(defaultExpiration time.Duration) *Cache {
 	c := &Cache{
 		memcache: &memcache{
 			items:             make(map[string]Item),

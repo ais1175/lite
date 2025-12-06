@@ -31,6 +31,26 @@ func registerStorageApi(group *echo.Group, fileService *file.Service) {
 		return c.JSON(200, httputil.Response(assetData))
 	})
 
+	group.GET("/storage/:organizationId/file/:fileId", func(c echo.Context) error {
+		ctx := c.Request().Context()
+
+		organizationID := c.Param("organizationId")
+		fileID := c.Param("fileId")
+
+		assetData, err := fileService.GetStorageFile(ctx, organizationID, fileID)
+		if err != nil {
+			if errors.Is(err, file.GetFileError{}) {
+				return echo.NewHTTPError(http.StatusInternalServerError,
+					httputil.ErrorResponse("Failed to get storage file"),
+				)
+			}
+
+			return echo.NewHTTPError(http.StatusInternalServerError, httputil.ErrorResponse(err.Error()))
+		}
+
+		return c.JSON(200, httputil.Response(assetData))
+	})
+
 	group.POST("/storage/:organizationId/upload", func(c echo.Context) error {
 		ctx := c.Request().Context()
 

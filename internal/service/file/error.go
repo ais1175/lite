@@ -2,6 +2,19 @@ package file
 
 import "fmt"
 
+type GetFileError struct {
+	ErrorMsg string
+}
+
+func (e GetFileError) Error() string {
+	return fmt.Sprintf("failed to get file: %s", e.ErrorMsg)
+}
+
+func (GetFileError) Is(target error) bool {
+	_, ok := target.(GetFileError)
+	return ok
+}
+
 type ListStorageError struct {
 	ErrorMsg string
 }

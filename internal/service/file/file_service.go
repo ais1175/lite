@@ -103,7 +103,6 @@ func (s *Service) CreateFile(
 	return nil
 }
 
-// this is basically the function that is used for any dashboard uploads
 func (s *Service) CreateStorageFile(
 	ctx context.Context,
 	organizationID string,
@@ -224,6 +223,31 @@ func (s *Service) ListStorageFiles(
 	}
 
 	return response, nil
+}
+
+func (s *Service) GetStorageFile(
+	ctx context.Context,
+	organizationID string,
+	fileID string,
+) (*api.Asset, error) {
+	file, err := filequery.FindFileByID(ctx, s.db, organizationID, fileID)
+	if err != nil {
+		storageError := &GetFileError{
+			ErrorMsg: err.Error(),
+		}
+		logrus.WithError(storageError).
+			WithField("organization_id", organizationID).
+			Error("FileService.GetStorageFile")
+		return nil, storageError
+	}
+
+	return &api.Asset{
+		ID:        file.ID,
+		Type:      file.Type,
+		Key:       file.Key,
+		Size:      file.Size,
+		CreatedAt: file.CreatedAt,
+	}, nil
 }
 
 func (s *Service) encode(file multipart.File, header *multipart.FileHeader) (*bytes.Reader, error) {

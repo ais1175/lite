@@ -30,7 +30,7 @@ type Storage struct {
 
 func New(s3Provider string) *Storage {
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion("auto"),
+		config.WithRegion(os.Getenv("AWS_REGION")),
 	)
 	if err != nil {
 		log.Fatalf("failed to load default config: %v", err)

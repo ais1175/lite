@@ -9,7 +9,10 @@ import { ProtectedRoute } from "./features/auth/routes/ProtectedRoute";
 import { NewOrganizationRoute } from "./features/organizations/routes/NewOrganizationRoute";
 import { OrganizationSelectRoute } from "./features/organizations/routes/OrganizationSelectRoute";
 import { Toaster } from "sonner";
-const StorageRoute = lazy(() => import("./features/files/StorageRoute"));
+const StorageRoute = lazy(
+  () => import("./features/files/routes/storage-route"),
+);
+const FileRoute = lazy(() => import("./features/files/routes/file-route"));
 const TokensRoute = lazy(() => import("./features/tokens/routes/TokensRoute"));
 const DatasetRoute = lazy(() => import("./features/logs/routes/dataset-route"));
 const LogsRoute = lazy(() => import("./features/logs/routes/logs-route"));
@@ -36,7 +39,10 @@ function App() {
                 <Route path=":organizationId" element={<AppLayout />}>
                   <Route index element={<AppDashboard />} />
                   <Route path="tokens" element={<TokensRoute />} />
-                  <Route path="storage" element={<StorageRoute />} />
+                  <Route path="storage">
+                    <Route index element={<StorageRoute />} />
+                    <Route path=":fileId" element={<FileRoute />} />
+                  </Route>
                   <Route path="logs">
                     <Route index element={<DatasetRoute />} />
                     <Route path=":datasetId" element={<LogsRoute />} />

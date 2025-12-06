@@ -83,11 +83,17 @@ var rootCmd = &cobra.Command{
 		clickhouse.AutoMigrate(cmd.Context(), chConfig)
 		clickhouseClient := clickhouse.NewClient(chConfig)
 
-		storageLayer := storage.New("s3")
+		s3Provider := viper.GetString("s3-provider")
+		storageLayer := storage.New(s3Provider)
+
 		// im not sure if we need to exit here.
 		// not all uers might want to use this for file uploads
-		if err := storageLayer.CreateBucket(cmd.Context()); err != nil {
-			slog.Warn("failed to create default bucket", slog.Any("error", err))
+		// this will also only apply for minio, since I dont even think you can manually create a bucket
+		// on their shitty self hosted version
+		if s3Provider == "minio" {
+			if err := storageLayer.CreateBucket(cmd.Context()); err != nil {
+				slog.Warn("failed to create default bucket", slog.Any("error", err))
+			}
 		}
 
 		authService := auth.NewService(store)
@@ -97,7 +103,7 @@ var rootCmd = &cobra.Command{
 		datsetService := dataset.NewService(store, clickhouseClient)
 		logService := log.NewService(store, clickhouseClient, datsetService)
 
-		memcache := cache.NewMemcache(0)
+		memcache := cache.NewMemcache(5 * time.Minute)
 
 		server := http.NewServer(
 			authService,

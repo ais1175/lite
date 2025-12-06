@@ -26,6 +26,25 @@ func Create(ctx context.Context, db *bun.DB, file *database.Asset) (bun.Tx, erro
 	return tx, nil
 }
 
+func FindFileByID(ctx context.Context, db *bun.DB, organizationID, id string) (*database.Asset, error) {
+	var file database.Asset
+	err := db.NewSelect().
+		Model(&file).
+		Where("organization_id = ?", organizationID).
+		Where("id = ?", id).
+		Limit(1).
+		Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &file, nil
+}
+
 func FindStorageFiles(ctx context.Context, db *bun.DB, organizationID, search string) ([]*database.Asset, error) {
 	var files []*database.Asset
 

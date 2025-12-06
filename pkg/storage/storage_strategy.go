@@ -16,7 +16,7 @@ type StorageLayer interface {
 
 func New(provider string) StorageLayer {
 	switch provider {
-	case "s3":
+	case "s3", "r2", "minio":
 		s3Provider := viper.GetString("s3-provider")
 		return s3.New(s3Provider)
 	}
