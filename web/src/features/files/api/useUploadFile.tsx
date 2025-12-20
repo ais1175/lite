@@ -5,7 +5,7 @@ import { useParams } from "react-router";
 export function useUploadFile() {
   const params = useParams<Params>();
 
-  const { mutate, isPending } = useMutation({
+  const { mutate, mutateAsync, isPending } = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
@@ -24,5 +24,5 @@ export function useUploadFile() {
     },
   });
 
-  return { mutate, isPending };
+  return { mutate, mutateAsync, isPending };
 }

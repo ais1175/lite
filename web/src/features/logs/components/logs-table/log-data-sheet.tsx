@@ -3,10 +3,7 @@
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  materialDark,
-  materialLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
+import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -168,8 +165,6 @@ export function LogDataSheet() {
 
   const { data: log } = useLog(organizationId, datasetId, traceId);
 
-  console.log("logger", log);
-
   if (!log) {
     return null;
   }
@@ -239,11 +234,11 @@ export function LogDataSheet() {
               <span
                 className={cn(
                   "text-md inline-flex items-center rounded-md px-2 py-1 font-medium ring-1 ring-inset",
-                  LOG_LEVELS[log.Level] ??
+                  LOG_LEVELS[log.Metadata.severity] ??
                     "bg-gray-400/10 text-gray-400 ring-gray-400/20",
                 )}
               >
-                {log?.Level}
+                {log?.Metadata.severity}
               </span>
             </div>
           </div>

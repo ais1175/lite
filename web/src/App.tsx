@@ -13,7 +13,7 @@ const StorageRoute = lazy(
   () => import("./features/files/routes/storage-route"),
 );
 const FileRoute = lazy(() => import("./features/files/routes/file-route"));
-const TokensRoute = lazy(() => import("./features/tokens/routes/TokensRoute"));
+const TokensRoute = lazy(() => import("./features/tokens/routes/tokens-route"));
 const DatasetRoute = lazy(() => import("./features/logs/routes/dataset-route"));
 const LogsRoute = lazy(() => import("./features/logs/routes/logs-route"));
 

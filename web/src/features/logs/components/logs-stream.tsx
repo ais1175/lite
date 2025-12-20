@@ -9,11 +9,15 @@ interface LogsStreamProps {
 export function LogsStream({ organizationId, datasetId }: LogsStreamProps) {
   const { data: fields } = useListFields(organizationId, datasetId);
 
+  if (!datasetId || !organizationId) {
+    return null;
+  }
+
   return (
     <div className="relative flex flex-col h-[calc(100vh-5rem)] overflow-hidden -m-4 -mt-0">
       <LogsTable
         fields={fields}
-        organizationId={organizationId}
+        teamId={organizationId}
         datasetId={datasetId}
         levels={["info", "warn", "error"]}
         defaultRowSelection={{}}

@@ -7,7 +7,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useCallback, useReducer } from "react";
+import { cn } from "@/lib/utils";
+import {
+  CheckCircle2,
+  FileIcon,
+  Trash2,
+  UploadCloud,
+  XCircle,
+} from "lucide-react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useUploadFile } from "../api/useUploadFile";
 
@@ -23,32 +31,32 @@ enum FileUploadStatus {
 interface FileUpload {
   id: string;
   file: File;
-  status: string;
+  status: FileUploadStatus;
 }
 
 interface UploadState {
   files: FileUpload[];
-  isPending: boolean;
 }
 
 type FileAction =
-  | { type: "ADD_FILE"; file: File; id: string }
-  | { type: "UPDATE_FILE_STATUS"; id: string; status: FileUploadStatus };
+  | { type: "ADD_FILES"; files: File[] }
+  | { type: "UPDATE_FILE_STATUS"; id: string; status: FileUploadStatus }
+  | { type: "REMOVE_FILE"; id: string }
+  | { type: "RESET" };
 
-function reducer(state: UploadState, action: FileAction) {
+function reducer(state: UploadState, action: FileAction): UploadState {
   switch (action.type) {
-    case "ADD_FILE":
+    case "ADD_FILES": {
+      const newFiles = action.files.map((file) => ({
+        id: Math.random().toString(36).substring(2, 9),
+        file,
+        status: FileUploadStatus.QUEUED,
+      }));
       return {
         ...state,
-        files: [
-          ...state.files,
-          {
-            id: action.id,
-            file: action.file,
-            status: FileUploadStatus.QUEUED,
-          },
-        ],
+        files: [...state.files, ...newFiles],
       };
+    }
     case "UPDATE_FILE_STATUS":
       return {
         ...state,
@@ -56,117 +64,220 @@ function reducer(state: UploadState, action: FileAction) {
           file.id === action.id ? { ...file, status: action.status } : file,
         ),
       };
+    case "REMOVE_FILE":
+      return {
+        ...state,
+        files: state.files.filter((file) => file.id !== action.id),
+      };
+    case "RESET":
+      return { files: [] };
     default:
       return state;
   }
 }
 
 export function UploadDialog() {
-  const { mutate } = useUploadFile();
+  const { mutateAsync } = useUploadFile();
+  const [isOpen, setIsOpen] = useState(false);
 
   const [uploadState, dispatch] = useReducer(reducer, {
     files: [],
-    isPending: false,
   });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles = acceptedFiles
-      .filter(
-        (file) => file.name && file.size > 0 && file.size <= MAX_FILE_SIZE,
-      )
-      .map((file) => ({
-        id: Math.random().toString(36).substring(2, 9),
-        file,
-      }));
-
-    for (const file of newFiles) {
-      console.log(file);
-      dispatch({ type: "ADD_FILE", file: file.file, id: file.id });
+    const validFiles = acceptedFiles.filter(
+      (file) => file.size > 0 && file.size <= MAX_FILE_SIZE,
+    );
+    if (validFiles.length > 0) {
+      dispatch({ type: "ADD_FILES", files: validFiles });
     }
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     maxSize: MAX_FILE_SIZE,
     onDrop,
+    noClick: true,
+    noKeyboard: true,
   });
 
-  function handleUpload() {
-    for (const file of uploadState.files) {
-      dispatch({
-        type: "UPDATE_FILE_STATUS",
-        id: file.id,
-        status: FileUploadStatus.PENDING,
-      });
-      mutate(file.file, {
-        onSuccess: () => {
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      if (event.clipboardData && event.clipboardData.files.length > 0) {
+        const files = Array.from(event.clipboardData.files);
+        onDrop(files);
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener("paste", handlePaste);
+    }
+
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [isOpen, onDrop]);
+
+  const handleUpload = async () => {
+    const uploadPromises = uploadState.files.map(async (file) => {
+      if (file.status === FileUploadStatus.QUEUED) {
+        dispatch({
+          type: "UPDATE_FILE_STATUS",
+          id: file.id,
+          status: FileUploadStatus.PENDING,
+        });
+
+        try {
+          await mutateAsync(file.file);
           dispatch({
             type: "UPDATE_FILE_STATUS",
             id: file.id,
             status: FileUploadStatus.SUCCESS,
           });
-        },
-        onError: () => {
+        } catch {
           dispatch({
             type: "UPDATE_FILE_STATUS",
             id: file.id,
             status: FileUploadStatus.ERROR,
           });
-        },
-      });
+        }
+      }
+    });
+
+    await Promise.all(uploadPromises);
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      dispatch({ type: "RESET" });
     }
-  }
+  };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>
         <Button>Upload files</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>Upload files</DialogTitle>
         </DialogHeader>
 
-        <div>
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed p-4 rounded-md ${
-              isDragActive ? "border-blue-500" : "border-gray-300"
-            }`}
-          >
-            <input {...getInputProps()} />
-            {isDragActive ? (
-              <p className="text-gray-500">Drop the files here ...</p>
-            ) : (
-              <p className="text-gray-500">
-                Drag 'n' drop some files here, or click to select files
+        <div
+          {...getRootProps()}
+          className={cn(
+            "border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center transition-colors cursor-pointer",
+            isDragActive && "border-primary bg-muted/50",
+          )}
+        >
+          <input {...getInputProps()} />
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="p-4 bg-muted rounded-full">
+              <UploadCloud className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold">
+                Click to upload or drag and drop
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                SVG, PNG, JPG or GIF (max. 500MB)
               </p>
-            )}
+            </div>
+            <Button type="button" onClick={open} variant="secondary" size="sm">
+              Select files
+            </Button>
           </div>
         </div>
-        <div>
-          {uploadState.files.map((file) => (
-            <div key={file.id} className="flex items-center mt-2">
-              <span className="text-foreground">{file.file.name}</span>
-              <div className="ml-4">
-                {file.status === "queued" && (
-                  <span className="text-blue-500">Queued</span>
-                )}
-                {file.status === "pending" && (
-                  <span className="text-yellow-500">Uploading...</span>
-                )}
-                {file.status === "success" && (
-                  <span className="text-green-500">Uploaded</span>
-                )}
-                {file.status === "error" && (
-                  <span className="text-red-500">Error</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+
+        {uploadState.files.length > 0 && (
+          <div className="space-y-2 mt-4 max-h-60 overflow-y-auto pr-2">
+            <h4 className="text-sm font-medium">Files to upload</h4>
+            <ul className="divide-y divide-border rounded-md border">
+              {uploadState.files.map((fileUpload) => (
+                <li
+                  key={fileUpload.id}
+                  className="flex items-center justify-between p-3"
+                >
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="p-2 bg-muted rounded-md shrink-0">
+                      <FileIcon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="text-sm overflow-hidden">
+                      <p
+                        className="font-medium truncate max-w-[200px]"
+                        title={fileUpload.file.name}
+                      >
+                        {fileUpload.file.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {(fileUpload.file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {fileUpload.status === FileUploadStatus.QUEUED && (
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                        Queued
+                      </span>
+                    )}
+                    {fileUpload.status === FileUploadStatus.PENDING && (
+                      <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">
+                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+                        Uploading...
+                      </div>
+                    )}
+                    {fileUpload.status === FileUploadStatus.SUCCESS && (
+                      <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Uploaded
+                      </span>
+                    )}
+                    {fileUpload.status === FileUploadStatus.ERROR && (
+                      <span className="flex items-center gap-1 text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full border border-red-200">
+                        <XCircle className="h-3 w-3" />
+                        Error
+                      </span>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() =>
+                        dispatch({ type: "REMOVE_FILE", id: fileUpload.id })
+                      }
+                      disabled={fileUpload.status === FileUploadStatus.PENDING}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <DialogFooter>
-          <Button onClick={handleUpload}>Upload</Button>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUpload}
+            disabled={
+              uploadState.files.length === 0 ||
+              uploadState.files.every(
+                (f) => f.status === FileUploadStatus.SUCCESS,
+              ) ||
+              uploadState.files.some(
+                (f) => f.status === FileUploadStatus.PENDING,
+              )
+            }
+          >
+            Upload{" "}
+            {uploadState.files.length > 0
+              ? `(${uploadState.files.length})`
+              : ""}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

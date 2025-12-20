@@ -7,9 +7,11 @@ export default function StorageRoute() {
   return (
     <div>
       <UploadDialog />
-      <Suspense fallback={<DataTableSkeleton columnCount={10} />}>
-        <AssetList />
-      </Suspense>
+      <div className="mt-4">
+        <Suspense fallback={<DataTableSkeleton columnCount={10} />}>
+          <AssetList />
+        </Suspense>
+      </div>
     </div>
   );
 }

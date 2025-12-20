@@ -18,7 +18,5 @@ export function useCurrentOrganization(organizationId: string | undefined) {
     },
   });
 
-  console.log("useCurrentOrganization", data, isLoading);
-
   return { data, isLoading };
 }
