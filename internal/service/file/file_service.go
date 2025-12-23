@@ -29,6 +29,7 @@ func NewService(db *bun.DB, storageLayer storage.StorageLayer) *Service {
 	}
 }
 
+// this is used in the public api only
 func (s *Service) CreateFile(
 	ctx context.Context,
 	organizationID string,
@@ -103,6 +104,7 @@ func (s *Service) CreateFile(
 	return nil
 }
 
+// uhhh, this is used in the dashboard, not the public api
 func (s *Service) CreateStorageFile(
 	ctx context.Context,
 	organizationID string,
