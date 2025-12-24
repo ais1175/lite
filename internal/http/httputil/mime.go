@@ -12,8 +12,7 @@ func GetMimeDetails(fileHeader *multipart.FileHeader, file multipart.File) (stri
 	var err error
 	var fileType string
 
-	// Get the file type from the header
-	buf := make([]byte, fileHeader.Size)
+	buf := make([]byte, 3072)
 	_, err = file.Read(buf)
 	if err != nil {
 		return "", "", "", fmt.Errorf("error reading file: %w", err)

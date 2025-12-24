@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
@@ -18,7 +19,8 @@ type Config struct {
 }
 
 type Client struct {
-	conn driver.Conn
+	conn    driver.Conn
+	Enabled bool
 }
 
 type Log struct {
@@ -36,8 +38,17 @@ type LogField struct {
 	Type  string
 }
 
-func NewClient(config *Config) *Client {
-	c := &Client{}
+func NewClient(config *Config, enabled bool) *Client {
+	if !enabled {
+		slog.Warn("clickhosue is disabled, logging is not available")
+		return &Client{
+			Enabled: false,
+		}
+	}
+
+	c := &Client{
+		Enabled: true,
+	}
 
 	options := getClickhouseOptions(config)
 	conn, err := connect(options)

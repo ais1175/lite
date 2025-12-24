@@ -40,15 +40,15 @@ func ValidateMime(fileKey string, whitelistedTypes []string) echo.MiddlewareFunc
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			var err error
-			file, header, err := httputil.File(ctx.Request(), fileKey)
+			file, _, err := httputil.File(ctx.Request(), fileKey)
 			if err != nil {
-				fmt.Printf("Failed to fine formdata file. Error: %v\n", err)
+				fmt.Printf("Failed to find FormData file. Error: %v\n", err)
 				return ctx.JSON(http.StatusBadRequest, echo.Map{
 					"error": err.Error(),
 				})
 			}
 
-			buf := make([]byte, header.Size)
+			buf := make([]byte, 3072)
 			_, err = file.Read(buf)
 			if err != nil {
 				fmt.Printf("Failed to read buffer. Error: %v\n", err)

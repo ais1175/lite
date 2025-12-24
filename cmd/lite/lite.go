@@ -80,8 +80,12 @@ var rootCmd = &cobra.Command{
 			Database: viper.GetString("clickhouse-database"),
 		}
 
-		clickhouse.AutoMigrate(cmd.Context(), chConfig)
-		clickhouseClient := clickhouse.NewClient(chConfig)
+		clickhouseEnabled := shouldInitClickhouse(chConfig.Host)
+		if clickhouseEnabled {
+			clickhouse.AutoMigrate(cmd.Context(), chConfig)
+		}
+
+		clickhouseClient := clickhouse.NewClient(chConfig, clickhouseEnabled)
 
 		s3Provider := viper.GetString("s3-provider")
 		storageLayer := storage.New(s3Provider)
@@ -215,15 +219,19 @@ func init() {
 	)
 }
 
-func main() {
-	if err := rootCmd.Execute(); err != nil {
-		panic(err)
-	}
-}
-
 func bindError(err error) {
 	if err != nil {
 		slog.Error("failed to bind env", slog.Any("error", err))
 		os.Exit(1)
+	}
+}
+
+func shouldInitClickhouse(clickhouseHost string) bool {
+	return clickhouseHost != ""
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		panic(err)
 	}
 }
