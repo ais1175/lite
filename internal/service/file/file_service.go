@@ -182,10 +182,13 @@ func (s *Service) ListStorageFiles(
 	ctx context.Context,
 	organizationID string,
 	search string,
+	fileType string,
+	page int,
+	pageSize int,
 ) (*api.AssetResponse, error) {
 	var err error
 
-	files, err := filequery.FindStorageFiles(ctx, s.db, organizationID, search)
+	files, err := filequery.FindStorageFiles(ctx, s.db, organizationID, search, fileType, page, pageSize)
 	if err != nil {
 		storageError := &ListStorageError{
 			ErrorMsg: err.Error(),

@@ -16,8 +16,12 @@ func registerStorageApi(group *echo.Group, fileService *file.Service) {
 
 		organizationID := c.Param("organizationId")
 		search := c.QueryParam("search")
+		fileType := c.QueryParam("type")
 
-		assetData, err := fileService.ListStorageFiles(ctx, organizationID, search)
+		page, _ := httputil.QueryInt(c, "page", 0)
+		pageSize, _ := httputil.QueryInt(c, "pageSize", 20)
+
+		assetData, err := fileService.ListStorageFiles(ctx, organizationID, search, fileType, page, pageSize)
 		if err != nil {
 			if errors.Is(err, file.ListStorageError{}) {
 				return echo.NewHTTPError(http.StatusInternalServerError,

@@ -42,9 +42,7 @@ export function DataTable<T extends Asset>({
   rowSelection,
   setRowSelection,
 }: DataTableProps<T>) {
-  const router = useNavigate();
-  const pathname = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageSize: 20,
@@ -77,9 +75,9 @@ export function DataTable<T extends Asset>({
     if (pagination) {
       const params = new URLSearchParams(searchParams);
       params.set("page", `${pagination.pageIndex}`);
-      //router.replace(`${pathname}?${params.toString()}`);
+      setSearchParams(params, { replace: true });
     }
-  }, [pagination, router, searchParams, pathname]);
+  }, [pagination.pageIndex, setSearchParams]);
 
   return (
     <div>

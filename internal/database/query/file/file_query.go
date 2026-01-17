@@ -45,7 +45,7 @@ func FindFileByID(ctx context.Context, db *bun.DB, organizationID, id string) (*
 	return &file, nil
 }
 
-func FindStorageFiles(ctx context.Context, db *bun.DB, organizationID, search string) ([]*database.Asset, error) {
+func FindStorageFiles(ctx context.Context, db *bun.DB, organizationID, search, fileType string, page, pageSize int) ([]*database.Asset, error) {
 	var files []*database.Asset
 
 	// no, this does not scale at all, but...soonTM
@@ -57,7 +57,15 @@ func FindStorageFiles(ctx context.Context, db *bun.DB, organizationID, search st
 
 	if search != "" {
 		// not my proudest moment
-		sb = sb.Where("name LIKE ?", "%"+search+"%")
+		sb = sb.Where("key LIKE ?", "%"+search+"%")
+	}
+
+	if fileType != "" && fileType != "all" {
+		sb = sb.Where("type = ?", fileType)
+	}
+
+	if pageSize > 0 {
+		sb = sb.Limit(pageSize).Offset(page * pageSize)
 	}
 
 	err := sb.Scan(ctx)

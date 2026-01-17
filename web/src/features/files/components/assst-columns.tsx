@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 
-function formatFilename(key: string) {
+export function formatFilename(key: string) {
   const parts = key.split("/");
   return parts[parts.length - 1];
 }
