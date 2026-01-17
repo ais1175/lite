@@ -29,7 +29,7 @@ func NewGithubConfig() *oauth2.Config {
 }
 
 func CurrentOrgId(c echo.Context) (string, error) {
-	org_id, ok := c.Get("org_id").(string)
+	org_id, ok := c.Get(OrgIDContextKey).(string)
 	if !ok {
 		return "", errors.New("org not found in context")
 	}

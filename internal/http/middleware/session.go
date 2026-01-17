@@ -3,8 +3,8 @@ package middleware
 import (
 	"log/slog"
 	"net/http"
-	"strings"
 
+	internalauth "github.com/fivemanage/lite/internal/auth"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/labstack/echo/v4"
 )
@@ -15,11 +15,12 @@ func Session(authService *auth.Auth) echo.MiddlewareFunc {
 			ctx := c.Request().Context()
 			orgID := c.Param("organizationId")
 
-			if strings.HasPrefix(c.Request().URL.Path, "/api/dash/auth") {
+			path := c.Request().URL.Path
+			if path == "/api/dash/auth/login" || path == "/api/dash/auth/register" {
 				return next(c)
 			}
 
-			sessionCookie, err := c.Cookie("fmlite_session")
+			sessionCookie, err := c.Cookie(internalauth.SessionCookieName)
 			if err != nil {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "session required"})
 			}
@@ -43,8 +44,8 @@ func Session(authService *auth.Auth) echo.MiddlewareFunc {
 				}
 			}
 
-			c.Set("user", user)
-			c.Set("org_id", orgID)
+			c.Set(internalauth.UserContextKey, user)
+			c.Set(internalauth.OrgIDContextKey, orgID)
 			return next(c)
 		}
 	}

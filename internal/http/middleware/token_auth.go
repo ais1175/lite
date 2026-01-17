@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	internalauth "github.com/fivemanage/lite/internal/auth"
 	"github.com/fivemanage/lite/internal/database"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/pkg/cache"
@@ -39,7 +40,7 @@ func TokenAuth(tokenService *token.Service, memcache *cache.Cache) echo.Middlewa
 
 				memcache.Set(key, tokenData, 5*time.Minute)
 
-				c.Set("org_id", tokenData.OrganizationID)
+				c.Set(internalauth.OrgIDContextKey, tokenData.OrganizationID)
 				c.Set("token_data", tokenData)
 				return next(c)
 			}
@@ -52,7 +53,7 @@ func TokenAuth(tokenService *token.Service, memcache *cache.Cache) echo.Middlewa
 				})
 			}
 
-			c.Set("org_id", tokenData.OrganizationID)
+			c.Set(internalauth.OrgIDContextKey, tokenData.OrganizationID)
 			c.Set("token_data", tokenData)
 			return next(c)
 		}

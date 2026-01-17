@@ -1,11 +1,11 @@
 package internalapi
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
 	"github.com/fivemanage/lite/api"
+	internalauth "github.com/fivemanage/lite/internal/auth"
 	"github.com/fivemanage/lite/internal/http/validator"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/labstack/echo/v4"
@@ -13,23 +13,9 @@ import (
 
 func registerAuthApi(group *echo.Group, authservice *auth.Auth) {
 	group.GET("/auth/session", func(c echo.Context) error {
-		ctx := context.Background()
-
-		sessionCookie, err := c.Cookie("fmlite_session")
-		if err != nil {
-			return c.JSON(http.StatusUnauthorized, "failed to find session cookie")
-		}
-
-		user, err := authservice.UserBySession(ctx, sessionCookie.Value)
-		if err != nil {
-			if errors.Is(err, auth.ErrSessionExpired{}) {
-				return c.Redirect(http.StatusUnauthorized, "/auth")
-			}
-
-			return c.JSON(http.StatusForbidden, echo.Map{
-				"status":  "error",
-				"message": err.Error(),
-			})
+		user := c.Get(internalauth.UserContextKey)
+		if user == nil {
+			return c.JSON(http.StatusUnauthorized, "Unauthorized")
 		}
 
 		return c.JSON(http.StatusOK, echo.Map{
@@ -39,7 +25,7 @@ func registerAuthApi(group *echo.Group, authservice *auth.Auth) {
 	})
 
 	group.POST("/auth/login", func(c echo.Context) error {
-		ctx := context.Background()
+		ctx := c.Request().Context()
 
 		var login api.LoginRequest
 		if err := validator.BindAndValidate(c, &login); err != nil {
@@ -71,9 +57,9 @@ func registerAuthApi(group *echo.Group, authservice *auth.Auth) {
 	})
 
 	group.POST("/auth/logout", func(c echo.Context) error {
-		ctx := context.Background()
+		ctx := c.Request().Context()
 
-		sessionCookie, err := c.Cookie("fmlite_session")
+		sessionCookie, err := c.Cookie(internalauth.SessionCookieName)
 		if err != nil {
 			return c.JSON(http.StatusOK, echo.Map{
 				"message": "Already logged out",

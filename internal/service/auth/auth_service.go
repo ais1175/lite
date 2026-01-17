@@ -157,7 +157,7 @@ func (a *Auth) userExists(ctx context.Context, email string) bool {
 	user := new(database.User)
 	err := a.db.NewSelect().Model(user).Where("email = ?", email).Scan(ctx)
 	if err != nil {
-		fmt.Println(err)
+		logrus.WithField("email", email).WithError(err).Error("failed to check if user exists")
 	}
 
 	if user.ID == 0 {
@@ -172,7 +172,7 @@ func (a *Auth) createUser(ctx context.Context, register *api.RegisterRequest) (i
 	var err error
 	hash, err := crypt.HashPassword(register.Password)
 	if err != nil {
-		fmt.Println(err)
+		logrus.WithError(err).Error("failed to hash password")
 		return 0, err
 	}
 
@@ -227,12 +227,12 @@ func (a *Auth) createSession(ctx context.Context, userID int64) (string, error) 
 	session := &database.Session{
 		ID:        sessionID,
 		UserID:    int(userID),
-		ExpiresAt: time.Now().Add(time.Hour * 24),
+		ExpiresAt: time.Now().Add(auth.SessionDuration),
 	}
 
 	_, err = a.db.NewInsert().Model(session).Exec(ctx)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return session.ID, nil
@@ -284,19 +284,19 @@ func (a *Auth) LogoutUser(ctx context.Context, sessionID string) error {
 func (a *Auth) CreateSessionCookie(sessionID string) *http.Cookie {
 	isProduction := os.Getenv("ENV") == "production"
 	return &http.Cookie{
-		Name:     "fmlite_session",
+		Name:     auth.SessionCookieName,
 		Value:    sessionID,
 		Secure:   isProduction,
 		SameSite: http.SameSiteLaxMode,
 		HttpOnly: true,
 		Path:     "/",
-		Expires:  time.Now().Add(time.Hour * 24),
+		Expires:  time.Now().Add(auth.SessionDuration),
 	}
 }
 
 func (a *Auth) CreateLogoutCookie() *http.Cookie {
 	return &http.Cookie{
-		Name:     "fmlite_session",
+		Name:     auth.SessionCookieName,
 		Value:    "",
 		HttpOnly: true,
 		Path:     "/",
