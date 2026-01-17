@@ -1,6 +1,7 @@
 package internalapi
 
 import (
+	tokenhandler "github.com/fivemanage/lite/internal/http/internalapi/handler/token"
 	"github.com/fivemanage/lite/internal/http/middleware"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/fivemanage/lite/internal/service/dataset"
@@ -21,7 +22,7 @@ func Add(
 	group.Use(middleware.Session(authService))
 
 	registerAuthApi(group, authService)
-	registerTokensApi(group, tokenService)
+	tokenhandler.RegisterRoutes(group, tokenService)
 	registerOrganizationApi(group, organizationService)
 	registerStorageApi(group, fileService)
 	registerDatasetApi(group, datasetService)

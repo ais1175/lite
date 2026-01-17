@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/fivemanage/lite/internal/http/internalapi"
+	internalmiddleware "github.com/fivemanage/lite/internal/http/middleware"
 	"github.com/fivemanage/lite/internal/http/publicapi"
 	_validator "github.com/fivemanage/lite/internal/http/validator"
 	"github.com/fivemanage/lite/internal/service/auth"
@@ -47,6 +48,7 @@ func NewServer(
 
 	app.Use(otelecho.Middleware("lite-api"))
 	app.Use(middleware.Recover())
+	app.Use(internalmiddleware.AppContext)
 	app.Use(middleware.CORS())
 	app.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
 

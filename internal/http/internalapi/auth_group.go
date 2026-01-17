@@ -6,6 +6,7 @@ import (
 
 	"github.com/fivemanage/lite/api"
 	internalauth "github.com/fivemanage/lite/internal/auth"
+	"github.com/fivemanage/lite/internal/http/appctx"
 	"github.com/fivemanage/lite/internal/http/validator"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/labstack/echo/v4"
@@ -13,22 +14,24 @@ import (
 
 func registerAuthApi(group *echo.Group, authservice *auth.Auth) {
 	group.GET("/auth/session", func(c echo.Context) error {
-		user := c.Get(internalauth.UserContextKey)
+		cc := c.(*appctx.Context)
+		user := cc.User()
 		if user == nil {
-			return c.JSON(http.StatusUnauthorized, "Unauthorized")
+			return cc.JSON(http.StatusUnauthorized, "Unauthorized")
 		}
 
-		return c.JSON(http.StatusOK, echo.Map{
+		return cc.JSON(http.StatusOK, echo.Map{
 			"status": "ok",
 			"data":   user,
 		})
 	})
 
 	group.POST("/auth/login", func(c echo.Context) error {
-		ctx := c.Request().Context()
+		cc := c.(*appctx.Context)
+		ctx := cc.Request().Context()
 
 		var login api.LoginRequest
-		if err := validator.BindAndValidate(c, &login); err != nil {
+		if err := validator.BindAndValidate(cc, &login); err != nil {
 			return err
 		}
 
@@ -57,26 +60,27 @@ func registerAuthApi(group *echo.Group, authservice *auth.Auth) {
 	})
 
 	group.POST("/auth/logout", func(c echo.Context) error {
-		ctx := c.Request().Context()
+		cc := c.(*appctx.Context)
+		ctx := cc.Request().Context()
 
-		sessionCookie, err := c.Cookie(internalauth.SessionCookieName)
+		sessionCookie, err := cc.Cookie(internalauth.SessionCookieName)
 		if err != nil {
-			return c.JSON(http.StatusOK, echo.Map{
+			return cc.JSON(http.StatusOK, echo.Map{
 				"message": "Already logged out",
 			})
 		}
 
 		err = authservice.LogoutUser(ctx, sessionCookie.Value)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, echo.Map{
+			return cc.JSON(http.StatusInternalServerError, echo.Map{
 				"error": "Failed to logout",
 			})
 		}
 
 		logoutCookie := authservice.CreateLogoutCookie()
-		c.SetCookie(logoutCookie)
+		cc.SetCookie(logoutCookie)
 
-		return c.JSON(http.StatusOK, echo.Map{
+		return cc.JSON(http.StatusOK, echo.Map{
 			"message": "Logout successful",
 		})
 	})

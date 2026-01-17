@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	internalauth "github.com/fivemanage/lite/internal/auth"
+	"github.com/fivemanage/lite/internal/http/appctx"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/labstack/echo/v4"
 )
@@ -12,22 +13,23 @@ import (
 func Session(authService *auth.Auth) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			ctx := c.Request().Context()
-			orgID := c.Param("organizationId")
+			cc := c.(*appctx.Context)
+			ctx := cc.Request().Context()
+			orgID := cc.Param("organizationId")
 
-			path := c.Request().URL.Path
+			path := cc.Request().URL.Path
 			if path == "/api/dash/auth/login" || path == "/api/dash/auth/register" {
-				return next(c)
+				return next(cc)
 			}
 
-			sessionCookie, err := c.Cookie(internalauth.SessionCookieName)
+			sessionCookie, err := cc.Cookie(internalauth.SessionCookieName)
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "session required"})
+				return cc.JSON(http.StatusUnauthorized, map[string]string{"error": "session required"})
 			}
 
 			user, err := authService.UserBySession(ctx, sessionCookie.Value)
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid session"})
+				return cc.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid session"})
 			}
 
 			if len(orgID) > 0 {
@@ -35,18 +37,18 @@ func Session(authService *auth.Auth) echo.MiddlewareFunc {
 				if err != nil {
 					slog.Error("failed to check organization membership", "error", err, "userID", user.ID, "orgID", orgID)
 					// we need a better error here
-					return c.JSON(http.StatusInternalServerError, map[string]string{"error": "authorization check failed"})
+					return cc.JSON(http.StatusInternalServerError, map[string]string{"error": "authorization check failed"})
 				}
 
 				if !isMember {
 					// and here
-					return c.JSON(http.StatusForbidden, map[string]string{"error": "access denied to organization"})
+					return cc.JSON(http.StatusForbidden, map[string]string{"error": "access denied to organization"})
 				}
 			}
 
-			c.Set(internalauth.UserContextKey, user)
-			c.Set(internalauth.OrgIDContextKey, orgID)
-			return next(c)
+			cc.Set(internalauth.UserContextKey, user)
+			cc.Set(internalauth.OrgIDContextKey, orgID)
+			return next(cc)
 		}
 	}
 }

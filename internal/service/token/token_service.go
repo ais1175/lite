@@ -64,14 +64,14 @@ func (r *Service) CreateToken(ctx context.Context, data *api.CreateTokenRequest)
 	return apiToken, nil
 }
 
-func (r *Service) ListTokens(ctx context.Context) ([]*api.ListTokensResponse, error) {
+func (r *Service) ListTokens(ctx context.Context, organizationID string) ([]*api.ListTokensResponse, error) {
 	var err error
 	var response []*api.ListTokensResponse
 
 	ctx, span := tracer.Start(ctx, "token.list_tokens")
 	defer span.End()
 
-	tokens, err := tokenquery.List(ctx, r.db)
+	tokens, err := tokenquery.List(ctx, r.db, organizationID)
 	if err != nil {
 		span.RecordError(err)
 		otelzap.L().Error("failed to list tokens", zap.Error(err))
