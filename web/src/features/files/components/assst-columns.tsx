@@ -100,7 +100,7 @@ export function assetColumns(): ColumnDef<Asset>[] {
       accessorKey: "key",
       header: "URL",
       cell: (info) => {
-        const url = `${import.meta.env.VITE_DOMAIN}/${info.getValue() as string}`;
+        const url = `${import.meta.env.VITE_BUCKET_DOMAIN}/${info.getValue() as string}`;
 
         return (
           <TooltipProvider>
