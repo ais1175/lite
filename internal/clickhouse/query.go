@@ -65,8 +65,6 @@ func (c *Client) QueryLogs(ctx context.Context, organizationID, datasetID string
 	qb := querybuilder.New().Filter(filter).WithDateRange(startTime, endTime)
 	query, args := qb.Build(organizationID, datasetID)
 
-	fmt.Println(query)
-
 	rows, err := c.conn.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err

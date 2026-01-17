@@ -154,8 +154,6 @@ func (r *Service) QueryLogs(
 		return nil, err
 	}
 
-	fmt.Printf("toDateTime: %v, fromDateTime: %v\n", toDateTime, fromDateTime)
-
 	logs, err := r.ch.QueryLogs(ctx, organizationID, datasetID, fromDateTime, toDateTime, filterObj, cursor)
 	if err != nil {
 		return nil, err
