@@ -41,6 +41,9 @@ WORKDIR /app
 
 COPY --from=backend /app/main /app/main
 
+COPY --from=backend /app/internal/clickhouse/migrations /app/internal/clickhouse/migrations
+COPY --from=backend /app/migrate /app/migrate
+
 EXPOSE 8080
 
 USER nonroot:nonroot
