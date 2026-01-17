@@ -8,8 +8,12 @@ import (
 	"time"
 )
 
-type Release struct {
-	TagName string `json:"tag_name"`
+type GHCRToken struct {
+	Token string `json:"token"`
+}
+
+type GHCRTags struct {
+	Tags []string `json:"tags"`
 }
 
 type VersionStatus struct {
@@ -86,24 +90,46 @@ func (s *Service) GetVersionStatus() (*VersionStatus, error) {
 }
 
 func (s *Service) fetchLatestVersion() (string, error) {
-	resp, err := http.Get("https://api.github.com/repos/fivemanage/lite/releases")
+	tokenResp, err := http.Get("https://ghcr.io/token?service=ghcr.io&scope=repository:fivemanage/lite:pull")
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer tokenResp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("github api returned status: %s", resp.Status)
-	}
-
-	var releases []Release
-	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
+	var token GHCRToken
+	if err := json.NewDecoder(tokenResp.Body).Decode(&token); err != nil {
 		return "", err
 	}
 
-	if len(releases) == 0 {
-		return "", fmt.Errorf("no releases found")
+	req, _ := http.NewRequest("GET", "https://ghcr.io/v2/fivemanage/lite/tags/list", nil)
+	req.Header.Set("Authorization", "Bearer "+token.Token)
+
+	client := &http.Client{}
+	tagsResp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer tagsResp.Body.Close()
+
+	if tagsResp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("ghcr api returned status: %s", tagsResp.Status)
 	}
 
-	return releases[0].TagName, nil
+	var tags GHCRTags
+	if err := json.NewDecoder(tagsResp.Body).Decode(&tags); err != nil {
+		return "", err
+	}
+
+	if len(tags.Tags) == 0 {
+		return "", fmt.Errorf("no tags found")
+	}
+
+	for i := len(tags.Tags) - 1; i >= 0; i-- {
+		tag := tags.Tags[i]
+		if tag != "latest" {
+			return tag, nil
+		}
+	}
+
+	return "latest", nil
 }
