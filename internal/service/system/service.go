@@ -74,7 +74,7 @@ func (s *Service) GetVersionStatus() (*VersionStatus, error) {
 }
 
 func (s *Service) fetchLatestVersion() (string, error) {
-	resp, err := http.Get("https://api.github.com/repos/fivemanage/lite/releases/latest")
+	resp, err := http.Get("https://api.github.com/repos/fivemanage/lite/releases")
 	if err != nil {
 		return "", err
 	}
@@ -84,10 +84,14 @@ func (s *Service) fetchLatestVersion() (string, error) {
 		return "", fmt.Errorf("github api returned status: %s", resp.Status)
 	}
 
-	var release Release
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+	var releases []Release
+	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
 		return "", err
 	}
 
-	return release.TagName, nil
+	if len(releases) == 0 {
+		return "", fmt.Errorf("no releases found")
+	}
+
+	return releases[0].TagName, nil
 }
