@@ -1,85 +1,167 @@
 # Fivemanage Lite
 
-## Deployment
-To run Fivemanage Lite, you need to set up a MySQL or PostgreSQL database and an object storage service (S3 compatible).
+Fivemanage Lite is an open-source, lightweight management service designed for gaming communities. It provides essential features for file storage, structured logging, and community organization.
 
-### Database
-You can use either MySQL or PostgreSQL. The default is MySQL.
+## Features
 
-### Object Storage
-Currently only S3 or compatible object storage is supported.
-- s3
-- r2
-- minio
+- Multi-tenant organization support.
+- File storage with S3-compatible providers (AWS S3, Cloudflare R2, MinIO).
+- High-performance structured logging powered by ClickHouse.
+- Built-in authentication and session management.
+- OpenTelemetry integration for tracing (Jaeger).
+- Modern React-based administrative dashboard.
 
-Azure and GCP are not supported yet.
+---
 
-### Docker
-You can have a look at the `docker-compose.yml` file in the `deployments` folder.
+## Production Setup
 
-
-### Environment variables
-You can copy the `.env.template` file to `.env` and set the values.
-
-```env
-ADMIN_PASSWORD=verysecurepassword
-DSN=postgres://username:password@host:5432/fivemanage-lite?sslmode=disable
-
-API_TOKEN_HMAC_SECRET=<32 bytes secret>
-
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_ENDPOINT=
-AWS_BUCKET=
-AWS_REGION=
-
-CLICKHOUSE_HOST=localhost:19000
-CLICKHOUSE_DATABASE=default
-# for prod, you should create a new user with a password, or change the default user
-CLICKHOUSE_USERNAME=default
-CLICKHOUSE_PASSWORD=password
-```
-
-## Development
+The recommended way to run Fivemanage Lite in production is using Docker.
 
 ### Prerequisites
 
-- Go: 1.23 or later
-- Node.js: 20.x or later
-- pnpm: 9.11.x or later
-- air: hot reload for Go (https://github.com/air-verse/air)
+- Docker and Docker Compose installed on your system.
+- A PostgreSQL database (Metadata storage).
+- A ClickHouse instance (Logging storage).
+- An S3-compatible storage bucket (File storage).
 
-### Setup
+### Deployment Steps
 
-1. Install node_modules in `/web`.
-2. Either run `go mod download` in the root directory, or just let `air` handle it for you, but simply running `air` in the root directory.
-3. Set up docker.
-   1. Run `docker compose -f deployments/docker-compose.yml up -d`
-4. Set up environment variables
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/fivemanage/fivemanage-lite.git
+   cd fivemanage-lite
+   ```
 
-```env
-ADMIN_PASSWORD=password
-DSN=postgres://postgres:root@localhost:5432/fivemanage-lite-dev?sslmode=disable
+2. **Configure Environment Variables:**
+   Copy the template environment file and update it with your production values.
+   ```bash
+   cp .env.template .env
+   ```
 
-API_TOKEN_HMAC_SECRET=<32 bytes secret>
+3. **Start Infrastructure Services:**
+   You can use the provided Docker Compose file to start required services (PostgreSQL, ClickHouse, MinIO, Jaeger).
+   ```bash
+   docker compose -f deployments/docker-compose.yml up -d
+   ```
 
-AWS_ACCESS_KEY_ID=xxxx
-AWS_SECRET_ACCESS_KEY=xxxx
-AWS_ENDPOINT=
-AWS_BUCKET=
-AWS_REGION=
+4. **Run the Application:**
+   Build and run the Fivemanage Lite container using the provided Dockerfile.
+   ```bash
+   docker build -t fivemanage-lite -f build/package/Dockerfile .
+   docker run -d --name fivemanage-lite -p 8080:8080 --env-file .env fivemanage-lite
+   ```
 
-CLICKHOUSE_HOST=localhost:19000
-CLICKHOUSE_DATABASE=default
-CLICKHOUSE_USERNAME=default
-CLICKHOUSE_PASSWORD=password
-```
+The application will be accessible at `http://localhost:8080`. Database migrations are handled automatically on startup.
 
-### Running the application
+### Initial Login
 
-Migrations for Clickhouse and PostgreSQL are run automatically when the application starts.
+After starting the application for the first time, you can log in to the administrative dashboard using the following credentials:
 
+- **Username:** `admin`
+- **Password:** The value you set for `ADMIN_PASSWORD` in your `.env` file.
 
-Start the actual app: 
-1. Run `air` or `go run cmd/lite/lite.go` in the root directory to start the Go application 
-2. In `web/`, run `pnpm dev` to start the React application.
+---
+
+## Configuration
+
+The application is configured via environment variables.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Port the server listens on | `8080` |
+| `DSN` | PostgreSQL connection string | - |
+| `ADMIN_PASSWORD` | Initial password for the 'admin' user | `password` |
+| `API_TOKEN_HMAC_SECRET` | 32-byte secret for signing API tokens | - |
+| `S3_PROVIDER` | S3 provider (`s3`, `r2`, or `minio`) | `minio` |
+| `AWS_ACCESS_KEY_ID` | S3 access key ID | - |
+| `AWS_SECRET_ACCESS_KEY` | S3 secret access key | - |
+| `AWS_ENDPOINT` | S3 endpoint URL | - |
+| `AWS_BUCKET` | S3 bucket name | - |
+| `AWS_REGION` | S3 region | - |
+| `CLICKHOUSE_HOST` | ClickHouse host address | `localhost:19000` |
+| `CLICKHOUSE_USERNAME` | ClickHouse username | `default` |
+| `CLICKHOUSE_PASSWORD` | ClickHouse password | `password` |
+| `CLICKHOUSE_DATABASE` | ClickHouse database name | `default` |
+| `ENV` | Environment mode (`production` or `dev`) | `dev` |
+
+---
+
+## Development Setup
+
+If you want to contribute to the project or run it locally for development, follow these instructions.
+
+### Prerequisites
+
+- **Go**: 1.24 or later
+- **Node.js**: 22.x or later
+- **pnpm**: 9.x or later
+- **Air**: For backend hot-reloading (recommended)
+
+### Initial Setup
+
+1. **Install Frontend Dependencies:**
+   ```bash
+   cd web
+   pnpm install
+   cd ..
+   ```
+
+2. **Download Backend Dependencies:**
+   ```bash
+   go mod download
+   ```
+
+3. **Start Development Infrastructure:**
+   ```bash
+   docker compose -f deployments/docker-compose.yml up -d
+   ```
+
+4. **Configure Local Environment:**
+   Ensure your `.env` file points to the local services (the default values in `.env.template` are pre-configured for Docker Compose).
+
+### Running the Application
+
+To develop efficiently, run the backend and frontend in separate terminals.
+
+1. **Start the Backend:**
+   Using Air (hot-reloading):
+   ```bash
+   air
+   ```
+   Or standard Go:
+   ```bash
+   go run cmd/lite/lite.go
+   ```
+
+2. **Start the Frontend:**
+   ```bash
+   cd web
+   pnpm dev
+   ```
+
+The frontend development server runs on `http://localhost:5173` and proxies API requests to the backend.
+
+---
+
+## Contributing
+
+We welcome contributions. Please follow these guidelines:
+
+1. **Branching:** Use descriptive branch names like `feature/new-feature` or `fix/bug-description`.
+2. **Formatting:** Use `go fmt` for Go and `pnpm lint` for React code.
+3. **Commits:** Provide concise commit messages that explain the intent of the change.
+4. **Pull Requests:** Ensure your PR has a clear title and description of the changes made.
+
+## Project Structure
+
+- `cmd/lite`: Main entry point and CLI configuration.
+- `internal/`: Application logic, API handlers, and services.
+- `pkg/`: Reusable packages for storage, logging, and caching.
+- `web/`: Frontend React application.
+- `deployments/`: Docker Compose and deployment configurations.
+- `migrate/`: PostgreSQL schema migrations.
+- `build/`: Dockerfile and build scripts.
+
+## License
+
+Fivemanage Lite is released under the [MIT License](LICENSE.md).
