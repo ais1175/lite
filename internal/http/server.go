@@ -36,7 +36,7 @@ type Server struct {
 
 // TODO: Add sentry for monitoring. There should be an opt-out option.
 func NewServer(
-	authService *auth.Auth,
+	authService *auth.Service,
 	tokenService *token.Service,
 	fileService *file.Service,
 	organizationService *organization.Service,

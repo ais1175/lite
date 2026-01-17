@@ -23,15 +23,15 @@ type authConfig struct {
 	github *oauth2.Config
 }
 
-type Auth struct {
+type Service struct {
 	config authConfig
 	db     *bun.DB
 }
 
-func NewService(db *bun.DB) *Auth {
+func NewService(db *bun.DB) *Service {
 	githubConfig := auth.NewGithubConfig()
 
-	return &Auth{
+	return &Service{
 		config: authConfig{
 			github: githubConfig,
 		},
@@ -41,12 +41,12 @@ func NewService(db *bun.DB) *Auth {
 
 // CreateAdminUser creates the initial admin user if none exists
 
-func (a *Auth) CreateAdminUser() error {
+func (r *Service) CreateAdminUser() error {
 	var err error
 	ctx := context.Background()
 
 	user := new(database.User)
-	err = a.db.NewSelect().Model(user).Limit(1).Scan(ctx)
+	err = r.db.NewSelect().Model(user).Limit(1).Scan(ctx)
 	if err != nil {
 		// todo: create a database.selectError func
 		if errors.Is(err, sql.ErrNoRows) {
@@ -77,7 +77,7 @@ func (a *Auth) CreateAdminUser() error {
 		Username:     "admin",
 		IsAdmin:      true,
 	}
-	_, err = a.db.NewInsert().Model(admin).Exec(ctx)
+	_, err = r.db.NewInsert().Model(admin).Exec(ctx)
 	if err != nil {
 		return err
 	}
@@ -94,18 +94,18 @@ func (a *Auth) CreateAdminUser() error {
 // we will probably remove this, and init everything with an admin user which can create users instead
 // .... I guess we can keep it for that thouugh
 // doesnt' make much sense to have a register outside anyways
-func (a *Auth) RegisterUser(ctx context.Context, register *api.RegisterRequest) (string, error) {
-	exists := a.userExists(ctx, register.Email)
+func (r *Service) RegisterUser(ctx context.Context, register *api.RegisterRequest) (string, error) {
+	exists := r.userExists(ctx, register.Email)
 	if exists {
 		return "", errors.New("user already exists")
 	}
 
-	userID, err := a.createUser(ctx, register)
+	userID, err := r.createUser(ctx, register)
 	if err != nil {
 		return "", err
 	}
 
-	sessionID, err := a.createSession(ctx, userID)
+	sessionID, err := r.createSession(ctx, userID)
 	if err != nil {
 		return "", err
 	}
@@ -117,13 +117,13 @@ func (a *Auth) RegisterUser(ctx context.Context, register *api.RegisterRequest) 
 }
 
 // Login uses email and password to authenticate the user
-func (a *Auth) LoginUser(ctx context.Context, username, password string) (string, error) {
-	user, err := a.getUserByCredentials(ctx, username, password)
+func (r *Service) LoginUser(ctx context.Context, username, password string) (string, error) {
+	user, err := r.getUserByCredentials(ctx, username, password)
 	if err != nil {
 		return "", err
 	}
 
-	sessionID, err := a.createSession(ctx, user.ID)
+	sessionID, err := r.createSession(ctx, user.ID)
 	if err != nil {
 		return "", err
 	}
@@ -136,15 +136,15 @@ func (a *Auth) LoginUser(ctx context.Context, username, password string) (string
 
 // OAuthLogin uses OAuth2 to authenticate the user
 // This will probably work as register and login, right???
-func (a *Auth) OAuthLogin() string {
+func (r *Service) OAuthLogin() string {
 	verifier := oauth2.GenerateVerifier()
-	url := a.config.github.AuthCodeURL("state", oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
+	url := r.config.github.AuthCodeURL("state", oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(verifier))
 
 	return url
 }
 
-func (a *Auth) Callback(code string) *oauth2.Token {
-	token, err := a.config.github.Exchange(context.TODO(), code)
+func (r *Service) Callback(code string) *oauth2.Token {
+	token, err := r.config.github.Exchange(context.TODO(), code)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -153,9 +153,9 @@ func (a *Auth) Callback(code string) *oauth2.Token {
 }
 
 // we probably dont need this function anymore...maybe
-func (a *Auth) userExists(ctx context.Context, email string) bool {
+func (r *Service) userExists(ctx context.Context, email string) bool {
 	user := new(database.User)
-	err := a.db.NewSelect().Model(user).Where("email = ?", email).Scan(ctx)
+	err := r.db.NewSelect().Model(user).Where("email = ?", email).Scan(ctx)
 	if err != nil {
 		logrus.WithField("email", email).WithError(err).Error("failed to check if user exists")
 	}
@@ -168,7 +168,7 @@ func (a *Auth) userExists(ctx context.Context, email string) bool {
 }
 
 // CreateUser creates a new user with email and password
-func (a *Auth) createUser(ctx context.Context, register *api.RegisterRequest) (int64, error) {
+func (r *Service) createUser(ctx context.Context, register *api.RegisterRequest) (int64, error) {
 	var err error
 	hash, err := crypt.HashPassword(register.Password)
 	if err != nil {
@@ -182,7 +182,7 @@ func (a *Auth) createUser(ctx context.Context, register *api.RegisterRequest) (i
 	}
 
 	// this should be a tx, so we can rollback if we fail to get the LID
-	res, err := a.db.NewInsert().Model(user).Exec(ctx)
+	res, err := r.db.NewInsert().Model(user).Exec(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -196,11 +196,11 @@ func (a *Auth) createUser(ctx context.Context, register *api.RegisterRequest) (i
 	return lid, nil
 }
 
-func (a *Auth) getUserByCredentials(ctx context.Context, username, password string) (*database.User, error) {
+func (r *Service) getUserByCredentials(ctx context.Context, username, password string) (*database.User, error) {
 	var err error
 
 	user := new(database.User)
-	err = a.db.NewSelect().Model(user).Where("username = ?", username).Scan(ctx)
+	err = r.db.NewSelect().Model(user).Where("username = ?", username).Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, &ErrUserCredentials{}
@@ -218,7 +218,7 @@ func (a *Auth) getUserByCredentials(ctx context.Context, username, password stri
 }
 
 // not sure if this should be public or not yet
-func (a *Auth) createSession(ctx context.Context, userID int64) (string, error) {
+func (r *Service) createSession(ctx context.Context, userID int64) (string, error) {
 	sessionID, err := crypt.GenerateSessionID()
 	if err != nil {
 		return "", err
@@ -230,7 +230,7 @@ func (a *Auth) createSession(ctx context.Context, userID int64) (string, error) 
 		ExpiresAt: time.Now().Add(auth.SessionDuration),
 	}
 
-	_, err = a.db.NewInsert().Model(session).Exec(ctx)
+	_, err = r.db.NewInsert().Model(session).Exec(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -238,9 +238,9 @@ func (a *Auth) createSession(ctx context.Context, userID int64) (string, error) 
 	return session.ID, nil
 }
 
-func (a *Auth) UserBySession(ctx context.Context, sessionID string) (*api.User, error) {
+func (r *Service) UserBySession(ctx context.Context, sessionID string) (*api.User, error) {
 	session := new(database.Session)
-	err := a.db.NewSelect().Model(session).Relation("User").Where("session.id = ?", sessionID).Limit(1).Scan(ctx)
+	err := r.db.NewSelect().Model(session).Relation("User").Where("session.id = ?", sessionID).Limit(1).Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -259,13 +259,12 @@ func (a *Auth) UserBySession(ctx context.Context, sessionID string) (*api.User, 
 	}, nil
 }
 
-func (a *Auth) IsOrganizationMember(ctx context.Context, userID int64, organizationID string) (bool, error) {
+func (r *Service) IsOrganizationMember(ctx context.Context, userID int64, organizationID string) (bool, error) {
 	member := new(database.OrganizationMember)
-	err := a.db.NewSelect().Model(member).
+	err := r.db.NewSelect().Model(member).
 		Where("user_id = ? AND organization_id = ?", userID, organizationID).
 		Limit(1).
 		Scan(ctx)
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
@@ -276,12 +275,12 @@ func (a *Auth) IsOrganizationMember(ctx context.Context, userID int64, organizat
 	return true, nil
 }
 
-func (a *Auth) LogoutUser(ctx context.Context, sessionID string) error {
-	_, err := a.db.NewDelete().Model((*database.Session)(nil)).Where("id = ?", sessionID).Exec(ctx)
+func (r *Service) LogoutUser(ctx context.Context, sessionID string) error {
+	_, err := r.db.NewDelete().Model((*database.Session)(nil)).Where("id = ?", sessionID).Exec(ctx)
 	return err
 }
 
-func (a *Auth) CreateSessionCookie(sessionID string) *http.Cookie {
+func (r *Service) CreateSessionCookie(sessionID string) *http.Cookie {
 	isProduction := os.Getenv("ENV") == "production"
 	return &http.Cookie{
 		Name:     auth.SessionCookieName,
@@ -294,7 +293,7 @@ func (a *Auth) CreateSessionCookie(sessionID string) *http.Cookie {
 	}
 }
 
-func (a *Auth) CreateLogoutCookie() *http.Cookie {
+func (r *Service) CreateLogoutCookie() *http.Cookie {
 	return &http.Cookie{
 		Name:     auth.SessionCookieName,
 		Value:    "",
