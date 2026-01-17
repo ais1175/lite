@@ -36,6 +36,7 @@ export default function FileRoute() {
   }>();
 
   const { data, isPending } = useFile(organizationId, fileId);
+  const { data: config } = useConfig();
 
   const handleCopyLink = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -92,7 +93,6 @@ export default function FileRoute() {
     );
   }
 
-  const { data: config } = useConfig();
   const fileUrl = `${config?.bucket_domain}/${data.key}`;
   const fileName = data.key.split("/").pop() || data.key;
 
