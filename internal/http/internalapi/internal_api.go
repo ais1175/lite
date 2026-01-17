@@ -7,6 +7,7 @@ import (
 	"github.com/fivemanage/lite/internal/service/dataset"
 	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/organization"
+	"github.com/fivemanage/lite/internal/service/system"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/labstack/echo/v4"
 )
@@ -18,6 +19,7 @@ func Add(
 	organizationService *organization.Service,
 	fileService *file.Service,
 	datasetService *dataset.Service,
+	systemService *system.Service,
 ) {
 	group.Use(middleware.Session(authService))
 
@@ -26,4 +28,5 @@ func Add(
 	registerOrganizationApi(group, organizationService)
 	registerStorageApi(group, fileService)
 	registerDatasetApi(group, datasetService)
+	registerSystemApi(group, systemService)
 }

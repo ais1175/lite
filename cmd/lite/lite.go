@@ -18,6 +18,7 @@ import (
 	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/log"
 	"github.com/fivemanage/lite/internal/service/organization"
+	"github.com/fivemanage/lite/internal/service/system"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/migrate"
 	"github.com/fivemanage/lite/pkg/cache"
@@ -29,6 +30,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 )
+
+var Version = "dev"
 
 var rootCmd = &cobra.Command{
 	Use:   "fivemanage",
@@ -42,7 +45,7 @@ var rootCmd = &cobra.Command{
 
 		logger.New()
 
-		slog.Info("starting Fivemanage application")
+		slog.Info("starting Fivemanage application", slog.String("version", Version))
 
 		otelShutdown, err := otel.SetupTracer()
 		if err != nil {
@@ -106,6 +109,7 @@ var rootCmd = &cobra.Command{
 		organizationService := organization.NewService(store)
 		datsetService := dataset.NewService(store, clickhouseClient)
 		logService := log.NewService(store, clickhouseClient, datsetService)
+		systemService := system.NewService(Version)
 
 		memcache := cache.NewMemcache(5 * time.Minute)
 
@@ -116,6 +120,7 @@ var rootCmd = &cobra.Command{
 			organizationService,
 			logService,
 			datsetService,
+			systemService,
 			memcache,
 		)
 

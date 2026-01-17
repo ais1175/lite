@@ -24,6 +24,7 @@ import { NavLink } from "react-router";
 import { OrganizationSwitcher } from "@/features/app/components/OrganizationSwitcher";
 import { useSession } from "@/features/auth/api/useSession";
 import { NavUser } from "@/features/app/components/NavUser";
+import { useVersion } from "@/features/app/api/system-api";
 
 const items = [
   {
@@ -66,6 +67,8 @@ const items = [
 
 export function AppSidebar() {
   const session = useSession();
+  const version = useVersion();
+
   return (
     <Sidebar className="h-full">
       <div className="flex flex-col h-full">
@@ -74,8 +77,11 @@ export function AppSidebar() {
         </SidebarHeader>
         <SidebarContent className="flex-1">
           <SidebarGroup>
-            <SidebarGroupLabel>
-              Fivemanage Lite ({import.meta.env.VITE_VERSION})
+            <SidebarGroupLabel className="flex items-center justify-between">
+              <span>Fivemanage Lite ({version.data?.current || "..."})</span>
+              {version.data?.update_available && (
+                <span className="flex h-2 w-2 rounded-full bg-blue-600" title={`New version available: ${version.data.latest}`} />
+              )}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>

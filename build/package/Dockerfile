@@ -30,8 +30,9 @@ COPY . .
 
 COPY --from=frontend /frontend/dist internal/http/dist
 
+ARG LITE_VERSION=dev
 ENV CGO_ENABLED=0
-RUN go build -o /app/main ./cmd/lite/lite.go
+RUN go build -ldflags "-X main.Version=${LITE_VERSION}" -o /app/main ./cmd/lite/lite.go
 
 # Application
 FROM gcr.io/distroless/static-debian12

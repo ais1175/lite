@@ -17,6 +17,7 @@ import (
 	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/log"
 	"github.com/fivemanage/lite/internal/service/organization"
+	"github.com/fivemanage/lite/internal/service/system"
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
@@ -41,6 +42,7 @@ func NewServer(
 	organizationService *organization.Service,
 	logService *log.Service,
 	datasetService *dataset.Service,
+	systemService *system.Service,
 	memcache *cache.Cache,
 ) *echo.Echo {
 	app := echo.New()
@@ -72,6 +74,7 @@ func NewServer(
 		organizationService,
 		fileService,
 		datasetService,
+		systemService,
 	)
 	publicapi.Add(apiGroup, fileService, tokenService, logService, memcache)
 
