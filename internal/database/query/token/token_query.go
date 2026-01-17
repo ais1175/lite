@@ -27,10 +27,13 @@ func Create(ctx context.Context, db *bun.DB, token *database.Token) error {
 	return nil
 }
 
-func List(ctx context.Context, db *bun.DB) ([]database.Token, error) {
+func List(ctx context.Context, db *bun.DB, organizationID string) ([]database.Token, error) {
 	var tokens []database.Token
 
-	err := db.NewSelect().Model(&tokens).Scan(ctx)
+	err := db.NewSelect().
+		Model(&tokens).
+		Where("organization_id = ?", organizationID).
+		Scan(ctx)
 	if err != nil {
 		return nil, err
 	}

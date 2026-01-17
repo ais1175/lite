@@ -11,8 +11,12 @@ import { useTokens } from "../api/useTokens";
 import { DeleteTokenDialog } from "./DeleteTokenDialog";
 import { KeyRoundIcon } from "lucide-react";
 
-export function TokensTable() {
-  const tokens = useTokens();
+interface TokensTableProps {
+  organizationId: string;
+}
+
+export function TokensTable({ organizationId }: TokensTableProps) {
+  const tokens = useTokens(organizationId);
 
   if (!tokens || tokens.length === 0) {
     return (

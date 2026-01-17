@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { CreateTokenDialog } from "../components/CreateTokenDialog";
 import { TokensTable } from "../components/TokensTable";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useParams } from "react-router";
+import { Params } from "@/typings/router";
 
 function TokensTableSkeleton() {
   return (
@@ -26,6 +28,12 @@ function TokensTableSkeleton() {
 }
 
 export default function TokensRoute() {
+  const params = useParams<Params>();
+
+  if (!params.organizationId) {
+    return <div>Organization ID is required</div>;
+  }
+
   return (
     <main className="container mx-auto py-10 max-w-5xl">
       <div className="flex items-center justify-between mb-8">
@@ -39,7 +47,7 @@ export default function TokensRoute() {
       </div>
       <section>
         <Suspense fallback={<TokensTableSkeleton />}>
-          <TokensTable />
+          <TokensTable organizationId={params.organizationId} />
         </Suspense>
       </section>
     </main>
