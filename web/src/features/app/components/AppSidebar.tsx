@@ -80,7 +80,10 @@ export function AppSidebar() {
             <SidebarGroupLabel className="flex items-center justify-between">
               <span>Fivemanage Lite ({version.data?.current || "..."})</span>
               {version.data?.update_available && (
-                <span className="flex h-2 w-2 rounded-full bg-blue-600" title={`New version available: ${version.data.latest}`} />
+                <span
+                  className="flex h-2 w-2 rounded-full bg-blue-600"
+                  title={`New version available: ${version.data.latest}`}
+                />
               )}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -117,3 +120,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
