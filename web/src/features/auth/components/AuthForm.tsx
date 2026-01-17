@@ -19,7 +19,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useState } from "react";
 import { useLogin } from "../api/useLogin";
 import { loginSchema, LoginSchema } from "@/typings/auth";
 
@@ -31,15 +30,13 @@ export function AuthForm({
     resolver: zodResolver(loginSchema),
   });
 
-  const { mutateAsync } = useLogin();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { mutate, isPending, error: loginError } = useLogin();
 
   const handleLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
-    setIsLoading(true);
-    setError(null);
-    mutateAsync(data);
+    mutate(data);
   };
+
+  const errorMessage = loginError instanceof Error ? loginError.message : null;
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -54,9 +51,9 @@ export function AuthForm({
           <Form {...formMethods}>
             <form onSubmit={formMethods.handleSubmit(handleLoginSubmit)}>
               <div className="flex flex-col gap-6">
-                {error && (
+                {errorMessage && (
                   <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                    {error}
+                    {errorMessage}
                   </div>
                 )}
                 <div className="grid gap-2">
@@ -67,7 +64,7 @@ export function AuthForm({
                       <FormItem>
                         <FormLabel>Username</FormLabel>
                         <FormControl>
-                          <Input {...field} disabled={isLoading} />
+                          <Input {...field} disabled={isPending} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -86,7 +83,7 @@ export function AuthForm({
                             type="password"
                             placeholder="*********"
                             {...field}
-                            disabled={isLoading}
+                            disabled={isPending}
                           />
                         </FormControl>
                         <FormMessage />
@@ -94,8 +91,8 @@ export function AuthForm({
                     )}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Logging in..." : "Login"}
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending ? "Logging in..." : "Login"}
                 </Button>
               </div>
             </form>

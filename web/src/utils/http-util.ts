@@ -26,10 +26,6 @@ export async function fetchApi<T = unknown>(
       },
     });
     if (!res.ok) {
-      if (IS_DEV && res.status === 401) {
-        window.location.href = "/auth";
-      }
-
       const errorResponse = (await res.json()) as {
         error: string;
         message: string;

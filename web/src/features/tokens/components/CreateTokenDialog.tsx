@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -9,9 +10,11 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { type TokenParams, tokenSchema } from "@/typings/token";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,18 +23,20 @@ import { useCreateToken } from "../api/useCreateToken";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { KeyRound } from "lucide-react";
+import { Check, Copy, KeyRound } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "@/typings/query";
 
 export function CreateTokenDialog() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [copied, setCopied] = useState(false);
 
   const { mutateAsync, reset, data, isSuccess } = useCreateToken();
   const form = useForm<TokenParams>({
     defaultValues: {
       type: "media",
+      identifier: "",
     },
     resolver: zodResolver(tokenSchema),
   });
@@ -51,63 +56,106 @@ export function CreateTokenDialog() {
   function resetForm() {
     form.reset();
     reset();
+    setCopied(false);
   }
 
   function handleInteractOutside(e: Event) {
     e.preventDefault();
   }
 
+  function copyToClipboard() {
+    if (data?.token) {
+      navigator.clipboard.writeText(data.token);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button>
           <KeyRound size={16} className="mr-2" />
           Create token
         </Button>
       </DialogTrigger>
       <DialogContent
         id="create-token-dialog"
-        aria-description="Create a new token"
         onInteractOutside={handleInteractOutside}
         onPointerDownOutside={handleInteractOutside}
         onAnimationEnd={resetForm}
+        className="sm:max-w-[425px]"
       >
         <DialogHeader>
           <DialogTitle>
             {isSuccess ? "Token created!" : "Create token"}
           </DialogTitle>
+          <DialogDescription>
+            {isSuccess
+              ? "Make sure to copy your new personal access token now. You won't be able to see it again!"
+              : "Create a new token to access the platform's API."}
+          </DialogDescription>
         </DialogHeader>
         {isSuccess && data ? (
-          <div>
-            <p className="text-sm">
-              Copy the token below and store it in a safe place.
-            </p>
-            <p className="text-red-500 text-sm">
-              You won't be able to see it again.
-            </p>
-            <div className="border p-2 mt-2">{data.token}</div>
+          <div className="space-y-4 py-4">
+            <div className="relative">
+              <div className="rounded-lg bg-muted p-4 font-mono text-sm break-all pr-12 border">
+                {data.token}
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="absolute right-2 top-2 h-8 w-8"
+                onClick={copyToClipboard}
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <div className="bg-destructive/10 text-destructive text-xs p-3 rounded-md border border-destructive/20 font-medium">
+              Warning: You will not be able to see this token again after closing
+              this dialog.
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setOpen(false)} className="w-full">
+                I've copied it
+              </Button>
+            </DialogFooter>
           </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleOnSubmit)}>
-              <div>
-                <FormField
-                  control={form.control}
-                  name="identifier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Identifier</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="text" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
+            <form
+              onSubmit={form.handleSubmit(handleOnSubmit)}
+              className="space-y-4 py-4"
+            >
+              <FormField
+                control={form.control}
+                name="identifier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Identifier</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="e.g. My Website Token"
+                        type="text"
+                        autoComplete="off"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      A unique name to identify this token.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <DialogFooter className="mt-4">
-                <Button type="submit" disabled={isPending}>
-                  Create
+              <DialogFooter className="pt-4">
+                <Button type="submit" disabled={isPending} className="w-full">
+                  {isPending ? "Creating..." : "Create Token"}
                 </Button>
               </DialogFooter>
             </form>

@@ -1,8 +1,20 @@
+import { Navigate } from "react-router";
 import { AuthForm } from "../components/AuthForm";
 import { useTheme } from "@/components/theme/useTheme";
+import { useSession } from "../api/useSession";
 
 export const AuthRoute: React.FC = () => {
   const { theme } = useTheme();
+  const { data: session, isPending: sessionPending } = useSession();
+
+  if (sessionPending) {
+    return null;
+  }
+
+  if (session) {
+    return <Navigate to="/app" replace />;
+  }
+
   let logoSrc = "/logos/logo-white.png";
   if (theme === "dark") {
     logoSrc = "/logos/logo-black.png";

@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Trash } from "lucide-react";
 import { useDeleteToken } from "../api/useDeleteToken";
 import { useQueryClient } from "@tanstack/react-query";
@@ -38,17 +40,32 @@ export function DeleteTokenDialog(props: DeleteTokenDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm" variant="destructive">
-          <Trash size={12} />
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+        >
+          <Trash size={16} />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Are you sure?</DialogTitle>
+          <DialogTitle>Delete Token</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete this token? This action cannot be
+            undone and any applications using this token will lose access.
+          </DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-4">
-          <Button type="submit" onClick={handleDelete} disabled={isPending}>
-            Delete
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isPending}
+          >
+            {isPending ? "Deleting..." : "Delete Token"}
           </Button>
         </DialogFooter>
       </DialogContent>
