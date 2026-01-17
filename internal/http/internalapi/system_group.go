@@ -18,4 +18,8 @@ func registerSystemApi(group *echo.Group, systemService *system.Service) {
 
 		return c.JSON(http.StatusOK, status)
 	})
+
+	group.GET("/system/config", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, systemService.GetConfig())
+	})
 }

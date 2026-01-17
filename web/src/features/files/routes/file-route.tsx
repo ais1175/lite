@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Link } from "react-router";
 import { FileViewer } from "../components/file/file-viewer";
 import { FileHeader } from "../components/file/file-header";
+import { useConfig } from "@/features/app/api/system-api";
 
 function formatBytes(bytes: number, decimals = 2) {
   if (!+bytes) return "0 Bytes";
@@ -91,7 +92,8 @@ export default function FileRoute() {
     );
   }
 
-  const fileUrl = `${import.meta.env.VITE_BUCKET_DOMAIN}/${data.key}`;
+  const { data: config } = useConfig();
+  const fileUrl = `${config?.bucket_domain}/${data.key}`;
   const fileName = data.key.split("/").pop() || data.key;
 
   const isImage = data.type === "image";

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
+import { useConfig } from "@/features/app/api/system-api";
 
 interface AssetGridViewProps {
   assets: Asset[];
@@ -60,8 +61,9 @@ export function AssetGridView({ assets, totalCount }: AssetGridViewProps) {
 }
 
 function AssetCard({ asset }: { asset: Asset }) {
+  const { data: config } = useConfig();
   const type = asset.type;
-  const url = `${import.meta.env.VITE_BUCKET_DOMAIN}/${asset.key}`;
+  const url = `${config?.bucket_domain}/${asset.key}`;
 
   let Icon = ImageIcon;
   if (type === "video") {

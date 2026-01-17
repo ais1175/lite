@@ -109,7 +109,7 @@ var rootCmd = &cobra.Command{
 		organizationService := organization.NewService(store, clickhouseClient)
 		datsetService := dataset.NewService(store, clickhouseClient)
 		logService := log.NewService(store, clickhouseClient, datsetService)
-		systemService := system.NewService(Version)
+		systemService := system.NewService(Version, viper.GetString("bucket-domain"))
 
 		memcache := cache.NewMemcache(5 * time.Minute)
 
@@ -181,6 +181,7 @@ func init() {
 	rootCmd.Flags().String("clickhouse-database", "default", "Clickhouse database")
 	// s3
 	rootCmd.Flags().String("s3-provider", "minio", "S3 provider")
+	rootCmd.Flags().String("bucket-domain", "", "Bucket domain for file storage")
 
 	// fuck me
 	if err := viper.BindPFlag("port", rootCmd.Flags().Lookup("port")); err != nil {
@@ -211,6 +212,9 @@ func init() {
 		bindError(err)
 	}
 	if err := viper.BindEnv("s3-provider", "S3_PROVIDER"); err != nil {
+		bindError(err)
+	}
+	if err := viper.BindEnv("bucket-domain", "BUCKET_DOMAIN"); err != nil {
 		bindError(err)
 	}
 

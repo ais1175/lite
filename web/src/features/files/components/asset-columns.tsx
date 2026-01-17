@@ -15,6 +15,7 @@ import {
   VideoIcon,
 } from "lucide-react";
 import { Link } from "react-router";
+import { useConfig } from "@/features/app/api/system-api";
 
 export function formatFilename(key: string) {
   const parts = key.split("/");
@@ -99,27 +100,7 @@ export function assetColumns(): ColumnDef<Asset>[] {
     {
       accessorKey: "key",
       header: "URL",
-      cell: (info) => {
-        const url = `${import.meta.env.VITE_BUCKET_DOMAIN}/${info.getValue() as string}`;
-
-        return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={(event) => copyToClipboard(event, url)}
-                  className="cursor-pointer rounded-md bg-accent/60 p-2 hover:bg-accent"
-                >
-                  <ClipboardCopy size={16} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Copy URL</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      },
+      cell: (info) => <UrlCell value={info.getValue() as string} />,
     },
     /*{
         id: "delete",
@@ -137,4 +118,27 @@ export function assetColumns(): ColumnDef<Asset>[] {
         ),
       }, */
   ];
+}
+
+function UrlCell({ value }: { value: string }) {
+  const { data: config } = useConfig();
+  const url = `${config?.bucket_domain}/${value}`;
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={(event) => copyToClipboard(event, url)}
+            className="cursor-pointer rounded-md bg-accent/60 p-2 hover:bg-accent"
+          >
+            <ClipboardCopy size={16} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Copy URL</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }

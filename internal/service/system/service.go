@@ -19,16 +19,28 @@ type VersionStatus struct {
 	LastChecked     time.Time `json:"last_checked"`
 }
 
+type SystemConfig struct {
+	BucketDomain string `json:"bucket_domain"`
+}
+
 type Service struct {
 	currentVersion string
 	latestVersion  string
 	lastChecked    time.Time
+	bucketDomain   string
 	mu             sync.RWMutex
 }
 
-func NewService(currentVersion string) *Service {
+func NewService(currentVersion string, bucketDomain string) *Service {
 	return &Service{
 		currentVersion: currentVersion,
+		bucketDomain:   bucketDomain,
+	}
+}
+
+func (s *Service) GetConfig() *SystemConfig {
+	return &SystemConfig{
+		BucketDomain: s.bucketDomain,
 	}
 }
 

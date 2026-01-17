@@ -4,7 +4,7 @@ import { DataTable } from "@/components/data/DataTable";
 import { Asset } from "@/typings/asset";
 import { useParams, useSearchParams } from "react-router";
 import { Params } from "@/typings/router";
-import { assetColumns } from "./assst-columns";
+import { assetColumns } from "./asset-columns";
 import { useStorageFiles } from "../api/useStorageFiles";
 
 import { AssetGridView } from "./asset-grid-view";
