@@ -91,3 +91,17 @@ func FindTotalStorageCount(ctx context.Context, db *bun.DB, organizationID strin
 
 	return count, nil
 }
+
+func FindTotalStorageSize(ctx context.Context, db *bun.DB, organizationID string) (int64, error) {
+	var size int64
+	err := db.NewSelect().
+		Model((*database.Asset)(nil)).
+		ColumnExpr("COALESCE(SUM(size), 0)").
+		Where("organization_id = ?", organizationID).
+		Scan(ctx, &size)
+	if err != nil {
+		return 0, err
+	}
+
+	return size, nil
+}

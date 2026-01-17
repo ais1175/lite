@@ -150,5 +150,30 @@ func (r *Client) QueryLogFields(ctx context.Context, organizationID, datasetID s
 }
 
 func (r *Client) QueryTotalLogs(ctx context.Context, organizationID, datasetID string) (int, error) {
-	return 0, nil
+	chCtx := clickhouse.Context(ctx, clickhouse.WithParameters(clickhouse.Parameters{
+		"TeamId":    organizationID,
+		"DatasetId": datasetID,
+	}))
+
+	var count uint64
+	err := r.conn.QueryRow(chCtx, "SELECT count() FROM logs WHERE TeamId = {TeamId:String} AND DatasetId = {DatasetId:String}").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(count), nil
+}
+
+func (r *Client) QueryTotalLogsByOrg(ctx context.Context, organizationID string) (int, error) {
+	chCtx := clickhouse.Context(ctx, clickhouse.WithParameters(clickhouse.Parameters{
+		"TeamId": organizationID,
+	}))
+
+	var count uint64
+	err := r.conn.QueryRow(chCtx, "SELECT count() FROM logs WHERE TeamId = {TeamId:String}").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(count), nil
 }

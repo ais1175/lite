@@ -4,20 +4,61 @@ import (
 	"context"
 
 	"github.com/fivemanage/lite/api"
+	"github.com/fivemanage/lite/internal/clickhouse"
 	"github.com/fivemanage/lite/internal/crypt"
 	"github.com/fivemanage/lite/internal/database"
+	datasetquery "github.com/fivemanage/lite/internal/database/query/dataset"
+	filequery "github.com/fivemanage/lite/internal/database/query/file"
 	organizationquery "github.com/fivemanage/lite/internal/database/query/organization"
+	tokenquery "github.com/fivemanage/lite/internal/database/query/token"
 	"github.com/uptrace/bun"
 )
 
 type Service struct {
 	db *bun.DB
+	ch *clickhouse.Client
 }
 
-func NewService(db *bun.DB) *Service {
+func NewService(db *bun.DB, ch *clickhouse.Client) *Service {
 	return &Service{
 		db: db,
+		ch: ch,
 	}
+}
+
+func (r *Service) GetStats(ctx context.Context, organizationID string) (*api.OrganizationStats, error) {
+	totalFiles, err := filequery.FindTotalStorageCount(ctx, r.db, organizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalSize, err := filequery.FindTotalStorageSize(ctx, r.db, organizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalLogs, err := r.ch.QueryTotalLogsByOrg(ctx, organizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	tokens, err := tokenquery.List(ctx, r.db, organizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	datasets, err := datasetquery.List(ctx, r.db, organizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.OrganizationStats{
+		TotalFiles:   totalFiles,
+		TotalSize:    totalSize,
+		TotalLogs:    totalLogs,
+		TotalTokens:  len(tokens),
+		TotalDataset: len(datasets),
+	}, nil
 }
 
 func (r *Service) CreateOrganization(ctx context.Context, data *api.CreateOrganizationRequest, userID int64) (*api.Organization, error) {

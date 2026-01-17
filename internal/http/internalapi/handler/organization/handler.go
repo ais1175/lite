@@ -57,3 +57,18 @@ func (r *handler) getOrganizationHandler(c echo.Context) error {
 
 	return cc.JSON(200, httputil.Response(organization))
 }
+
+func (r *handler) getOrganizationStatsHandler(c echo.Context) error {
+	cc := c.(*appctx.Context)
+	ctx := cc.Request().Context()
+
+	id := cc.Param("id")
+
+	stats, err := r.organizationService.GetStats(ctx, id)
+	if err != nil {
+		logrus.WithError(err).Error("failed to get organization stats")
+		return echo.NewHTTPError(500, err)
+	}
+
+	return cc.JSON(200, httputil.Response(stats))
+}

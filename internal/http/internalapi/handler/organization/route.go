@@ -17,4 +17,5 @@ func RegisterRoutes(group *echo.Group, organizationService *organization.Service
 	group.POST("/organization", handler.createOrganizationHandler)
 	group.GET("/organization", handler.listOrganizationsHandler)
 	group.GET("/organization/:id", handler.getOrganizationHandler)
+	group.GET("/organization/:id/stats", handler.getOrganizationStatsHandler)
 }

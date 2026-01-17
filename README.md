@@ -2,63 +2,38 @@
 
 Fivemanage Lite is an open-source, lightweight management service designed for gaming communities. It provides essential features for file storage, structured logging, and community organization.
 
+## Quick Start
+
+Run the latest version of Fivemanage Lite using Docker:
+
+```bash
+docker run -p 8080:8080 \
+  -e DSN=postgres://user:pass@host:5432/db \
+  -e ADMIN_PASSWORD=your_secure_password \
+  -e API_TOKEN_HMAC_SECRET=your_32_byte_secret \
+  ghcr.io/fivemanage/lite:0.1.0-beta.18
+```
+
+---
+
 ## Features
 
 - Multi-tenant organization support.
 - File storage with S3-compatible providers (AWS S3, Cloudflare R2, MinIO).
 - High-performance structured logging powered by ClickHouse.
 - Built-in authentication and session management.
-- OpenTelemetry integration for tracing (Jaeger).
+- OpenTelemetry integration for tracing.
 - Modern React-based administrative dashboard.
 
 ---
 
-## Production Setup
+## Hosting Options
 
-The recommended way to run Fivemanage Lite in production is using Docker.
+### Docker Compose
+For production environments, using Docker Compose is the most straightforward method to manage the application along with its dependencies (PostgreSQL and ClickHouse). You can find a template in the `deployments/docker-compose.yml` file.
 
-### Prerequisites
-
-- Docker and Docker Compose installed on your system.
-- A PostgreSQL database (Metadata storage).
-- A ClickHouse instance (Logging storage).
-- An S3-compatible storage bucket (File storage).
-
-### Deployment Steps
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/fivemanage/fivemanage-lite.git
-   cd fivemanage-lite
-   ```
-
-2. **Configure Environment Variables:**
-   Copy the template environment file and update it with your production values.
-   ```bash
-   cp .env.template .env
-   ```
-
-3. **Start Infrastructure Services:**
-   You can use the provided Docker Compose file to start required services (PostgreSQL, ClickHouse, MinIO, Jaeger).
-   ```bash
-   docker compose -f deployments/docker-compose.yml up -d
-   ```
-
-4. **Run the Application:**
-   Build and run the Fivemanage Lite container using the provided Dockerfile.
-   ```bash
-   docker build -t fivemanage-lite -f build/package/Dockerfile .
-   docker run -d --name fivemanage-lite -p 8080:8080 --env-file .env fivemanage-lite
-   ```
-
-The application will be accessible at `http://localhost:8080`. Database migrations are handled automatically on startup.
-
-### Initial Login
-
-After starting the application for the first time, you can log in to the administrative dashboard using the following credentials:
-
-- **Username:** `admin`
-- **Password:** The value you set for `ADMIN_PASSWORD` in your `.env` file.
+### Kubernetes
+Fivemanage Lite is stateless and can be easily deployed on Kubernetes. It is recommended to use a standard Deployment for the application and managed services for the database and storage. Ensure you configure the required environment variables via Secrets or ConfigMaps.
 
 ---
 
@@ -86,71 +61,75 @@ The application is configured via environment variables.
 
 ---
 
-## Development Setup
+## Initial Login
 
-If you want to contribute to the project or run it locally for development, follow these instructions.
+Once the application is running, access the dashboard at `http://localhost:8080`.
+
+- **Username:** `admin`
+- **Password:** The value of your `ADMIN_PASSWORD` environment variable.
+
+---
+
+## Development & Contribution
+
+Follow these instructions if you want to contribute to the project or build from source.
 
 ### Prerequisites
 
 - **Go**: 1.24 or later
 - **Node.js**: 22.x or later
 - **pnpm**: 9.x or later
-- **Air**: For backend hot-reloading (recommended)
+- **Air**: For backend hot-reloading
+- **Docker**: For running local infrastructure
 
 ### Initial Setup
 
-1. **Install Frontend Dependencies:**
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/fivemanage/fivemanage-lite.git
+   cd fivemanage-lite
+   ```
+
+2. **Install Frontend Dependencies:**
    ```bash
    cd web
    pnpm install
    cd ..
    ```
 
-2. **Download Backend Dependencies:**
+3. **Download Backend Dependencies:**
    ```bash
    go mod download
    ```
 
-3. **Start Development Infrastructure:**
+4. **Start Development Infrastructure:**
    ```bash
    docker compose -f deployments/docker-compose.yml up -d
    ```
 
-4. **Configure Local Environment:**
-   Ensure your `.env` file points to the local services (the default values in `.env.template` are pre-configured for Docker Compose).
+### Running for Development
 
-### Running the Application
+Run the backend and frontend in separate terminals.
 
-To develop efficiently, run the backend and frontend in separate terminals.
-
-1. **Start the Backend:**
-   Using Air (hot-reloading):
+1. **Backend:**
    ```bash
    air
    ```
-   Or standard Go:
-   ```bash
-   go run cmd/lite/lite.go
-   ```
 
-2. **Start the Frontend:**
+2. **Frontend:**
    ```bash
    cd web
    pnpm dev
    ```
 
-The frontend development server runs on `http://localhost:5173` and proxies API requests to the backend.
-
 ---
 
 ## Contributing
 
-We welcome contributions. Please follow these guidelines:
-
-1. **Branching:** Use descriptive branch names like `feature/new-feature` or `fix/bug-description`.
-2. **Formatting:** Use `go fmt` for Go and `pnpm lint` for React code.
-3. **Commits:** Provide concise commit messages that explain the intent of the change.
-4. **Pull Requests:** Ensure your PR has a clear title and description of the changes made.
+1. **Branching:** Use descriptive branch names (`feature/*`, `fix/*`).
+2. **Formatting:** Use `go fmt` and `pnpm lint`.
+3. **Commits:** Provide clear, professional messages.
+4. **Pull Requests:** Provide a detailed description of changes.
 
 ## Project Structure
 
