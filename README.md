@@ -2,6 +2,9 @@
 
 Fivemanage Lite is an open-source, lightweight management service designed for gaming communities. It provides essential features for file storage, structured logging, and community organization.
 
+<img width="1790" height="1001" alt="Screenshot 2026-01-18 at 01 43 59" src="https://github.com/user-attachments/assets/6cef883d-3961-495f-b5f6-e3204aac6664" />
+
+
 ## Quick Start
 
 Run the latest version of Fivemanage Lite using Docker:
