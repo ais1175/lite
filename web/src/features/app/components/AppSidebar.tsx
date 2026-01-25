@@ -47,9 +47,9 @@ const items = [
   },
   {
     title: "Team",
-    url: "#",
+    url: "team",
     icon: Users,
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     title: "Usage",
@@ -120,4 +120,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-

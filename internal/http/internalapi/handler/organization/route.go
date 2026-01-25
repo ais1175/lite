@@ -10,12 +10,12 @@ type handler struct {
 }
 
 func RegisterRoutes(group *echo.Group, organizationService *organization.Service) {
-	handler := handler{
+	h := handler{
 		organizationService: organizationService,
 	}
 
-	group.POST("/organization", handler.createOrganizationHandler)
-	group.GET("/organization", handler.listOrganizationsHandler)
-	group.GET("/organization/:id", handler.getOrganizationHandler)
-	group.GET("/organization/:id/stats", handler.getOrganizationStatsHandler)
+	group.POST("/organization", h.createOrganizationHandler)
+	group.GET("/organization", h.listOrganizationsHandler)
+	group.GET("/organization/:id", h.getOrganizationHandler)
+	group.GET("/organization/:id/stats", h.getOrganizationStatsHandler)
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/fivemanage/lite/internal/service/dataset"
 	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/log"
+	"github.com/fivemanage/lite/internal/service/member"
 	"github.com/fivemanage/lite/internal/service/organization"
 	"github.com/fivemanage/lite/internal/service/system"
 	"github.com/fivemanage/lite/internal/service/token"
@@ -107,6 +108,7 @@ var rootCmd = &cobra.Command{
 		tokenService := token.NewService(store)
 		fileService := file.NewService(store, storageLayer)
 		organizationService := organization.NewService(store, clickhouseClient)
+		memberService := member.NewService(store)
 		datsetService := dataset.NewService(store, clickhouseClient)
 		logService := log.NewService(store, clickhouseClient, datsetService)
 		systemService := system.NewService(Version, viper.GetString("bucket-domain"))
@@ -118,6 +120,7 @@ var rootCmd = &cobra.Command{
 			tokenService,
 			fileService,
 			organizationService,
+			memberService,
 			logService,
 			datsetService,
 			systemService,

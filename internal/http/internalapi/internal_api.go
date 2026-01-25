@@ -2,12 +2,15 @@ package internalapi
 
 import (
 	authhander "github.com/fivemanage/lite/internal/http/internalapi/handler/auth"
+	datasethandler "github.com/fivemanage/lite/internal/http/internalapi/handler/dataset"
+	memberhandler "github.com/fivemanage/lite/internal/http/internalapi/handler/member"
 	organizationhandler "github.com/fivemanage/lite/internal/http/internalapi/handler/organization"
 	tokenhandler "github.com/fivemanage/lite/internal/http/internalapi/handler/token"
 	"github.com/fivemanage/lite/internal/http/middleware"
 	"github.com/fivemanage/lite/internal/service/auth"
 	"github.com/fivemanage/lite/internal/service/dataset"
 	"github.com/fivemanage/lite/internal/service/file"
+	"github.com/fivemanage/lite/internal/service/member"
 	"github.com/fivemanage/lite/internal/service/organization"
 	"github.com/fivemanage/lite/internal/service/system"
 	"github.com/fivemanage/lite/internal/service/token"
@@ -19,6 +22,7 @@ func Add(
 	authService *auth.Service,
 	tokenService *token.Service,
 	organizationService *organization.Service,
+	memberService *member.Service,
 	fileService *file.Service,
 	datasetService *dataset.Service,
 	systemService *system.Service,
@@ -28,7 +32,8 @@ func Add(
 	authhander.RegisterRoutes(group, authService)
 	tokenhandler.RegisterRoutes(group, tokenService)
 	organizationhandler.RegisterRoutes(group, organizationService)
+	memberhandler.RegisterRoutes(group, memberService)
+	datasethandler.RegisterRoutes(group, datasetService)
 	registerStorageApi(group, fileService)
-	registerDatasetApi(group, datasetService)
 	registerSystemApi(group, systemService)
 }

@@ -55,3 +55,18 @@ func CreateMember(ctx context.Context, db *bun.DB, member *database.Organization
 
 	return tx, nil
 }
+
+func ListMembers(ctx context.Context, db *bun.DB, organizationID string) ([]database.OrganizationMember, error) {
+	var members []database.OrganizationMember
+
+	err := db.NewSelect().
+		Model(&members).
+		Relation("User").
+		Where("organization_id = ?", organizationID).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return members, nil
+}

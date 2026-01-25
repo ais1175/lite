@@ -16,6 +16,7 @@ import (
 	"github.com/fivemanage/lite/internal/service/dataset"
 	"github.com/fivemanage/lite/internal/service/file"
 	"github.com/fivemanage/lite/internal/service/log"
+	"github.com/fivemanage/lite/internal/service/member"
 	"github.com/fivemanage/lite/internal/service/organization"
 	"github.com/fivemanage/lite/internal/service/system"
 	"github.com/fivemanage/lite/internal/service/token"
@@ -40,6 +41,7 @@ func NewServer(
 	tokenService *token.Service,
 	fileService *file.Service,
 	organizationService *organization.Service,
+	memberService *member.Service,
 	logService *log.Service,
 	datasetService *dataset.Service,
 	systemService *system.Service,
@@ -72,6 +74,7 @@ func NewServer(
 		authService,
 		tokenService,
 		organizationService,
+		memberService,
 		fileService,
 		datasetService,
 		systemService,
