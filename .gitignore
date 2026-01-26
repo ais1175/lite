@@ -6,6 +6,8 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+web/src/lib/api/v1.d.ts
+
 node_modules
 dist
 dist-ssr
@@ -25,6 +27,8 @@ dist-ssr
 .env
 
 .docker
+
+docs
 
 tmp
 lite

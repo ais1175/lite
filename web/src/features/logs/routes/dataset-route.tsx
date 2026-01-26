@@ -5,5 +5,5 @@ import { Params } from "@/typings/router";
 export default function DatasetRoute() {
   const params = useParams<Params>();
 
-  return <DatasetOverview organizationId={params.organizationId} />;
+  return <DatasetOverview organizationId={params.organizationId!} />;
 }

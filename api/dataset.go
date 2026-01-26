@@ -3,11 +3,11 @@ package api
 import "time"
 
 type Dataset struct {
-	ID             string `json:"id,omitempty"`
-	Name           string `json:"name"`
-	Description    string `json:"description"`
-	RetentionDays  int    `json:"retentionDays"`
-	OrganizationID string `json:"organizationId"`
+	ID             string `json:"id,omitempty" validate:"required"`
+	Name           string `json:"name" validate:"required"`
+	Description    string `json:"description" validate:"required"`
+	RetentionDays  int    `json:"retentionDays" validate:"required"`
+	OrganizationID string `json:"organizationId" validate:"required"`
 }
 
 type DatasetField struct {

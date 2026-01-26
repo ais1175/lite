@@ -3,6 +3,7 @@ package publicapi
 import (
 	"github.com/fivemanage/lite/api"
 	"github.com/fivemanage/lite/internal/auth"
+	"github.com/fivemanage/lite/internal/http/httputil"
 	"github.com/fivemanage/lite/internal/http/middleware"
 	"github.com/fivemanage/lite/internal/service/log"
 	"github.com/fivemanage/lite/internal/service/token"
@@ -16,24 +17,42 @@ func registerLogsApi(
 	tokenService *token.Service,
 	cache *cache.Cache,
 ) {
-	group.POST("/logs", func(c echo.Context) error {
-		ctx := c.Request().Context()
-		dataset := c.Request().Header.Get("X-Fivemanage-Dataset")
+	h := &logsHandler{
+		logService: logService,
+	}
+	group.POST("/logs", h.submitLogs, middleware.TokenAuth(tokenService, cache))
+}
 
-		orgID, err := auth.CurrentOrgId(c)
-		if err != nil {
-			return err
-		}
+type logsHandler struct {
+	logService *log.Service
+}
 
-		var logs []api.Log
-		if err := c.Bind(&logs); err != nil {
-			return err
-		}
+// submitLogs godoc
+// @Summary      Submit logs
+// @Description  Submit multiple log entries for a dataset
+// @Tags         public
+// @Accept       json
+// @Produce      json
+// @Param        X-Fivemanage-Dataset  header    string    false  "Dataset name"
+// @Param        logs                  body      []api.Log  true   "Logs to submit"
+// @Success      200                   {object}  httputil.ResponseData{data=string}
+// @Failure      401                   {object}  httputil.ErrorResponseData
+// @Router       /logs [post]
+func (h *logsHandler) submitLogs(c echo.Context) error {
+	ctx := c.Request().Context()
+	dataset := c.Request().Header.Get("X-Fivemanage-Dataset")
 
-		logService.SubmitLogs(ctx, orgID, dataset, logs)
+	orgID, err := auth.CurrentOrgId(c)
+	if err != nil {
+		return err
+	}
 
-		return c.JSON(200, echo.Map{
-			"success": true,
-		})
-	}, middleware.TokenAuth(tokenService, cache))
+	var logs []api.Log
+	if err := c.Bind(&logs); err != nil {
+		return err
+	}
+
+	h.logService.SubmitLogs(ctx, orgID, dataset, logs)
+
+	return c.JSON(200, httputil.Response("ok"))
 }

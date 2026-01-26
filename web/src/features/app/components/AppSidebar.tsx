@@ -24,7 +24,7 @@ import { NavLink } from "react-router";
 import { OrganizationSwitcher } from "@/features/app/components/OrganizationSwitcher";
 import { useSession } from "@/features/auth/api/useSession";
 import { NavUser } from "@/features/app/components/NavUser";
-import { useVersion } from "@/features/app/api/system-api";
+import { $api } from "@/lib/api/client";
 
 const items = [
   {
@@ -67,7 +67,7 @@ const items = [
 
 export function AppSidebar() {
   const session = useSession();
-  const version = useVersion();
+  const version = $api.useQuery("get", "/dash/system/version");
 
   return (
     <Sidebar className="h-full">

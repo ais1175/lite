@@ -242,6 +242,20 @@ func shouldInitClickhouse(clickhouseHost string) bool {
 	return clickhouseHost != ""
 }
 
+// @title           Fivemanage Lite API
+// @version         1.0
+// @description     Open-source, easy-to-use gaming-community management service.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email   support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /api
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)

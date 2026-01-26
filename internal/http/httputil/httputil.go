@@ -6,31 +6,31 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type response struct {
+type ResponseData struct {
 	Status string `json:"status"`
 	Data   any    `json:"data"`
 }
 
-type errorResponse struct {
+type ErrorResponseData struct {
 	Status string    `json:"status"`
-	Data   errorData `json:"data"`
+	Data   ErrorData `json:"data"`
 }
 
-type errorData struct {
+type ErrorData struct {
 	Message string `json:"message"`
 }
 
-func Response(data any) *response {
-	return &response{
+func Response(data any) *ResponseData {
+	return &ResponseData{
 		Status: "ok",
 		Data:   data,
 	}
 }
 
-func ErrorResponse(message string) *errorResponse {
-	return &errorResponse{
+func ErrorResponse(message string) *ErrorResponseData {
+	return &ErrorResponseData{
 		Status: "error",
-		Data: errorData{
+		Data: ErrorData{
 			Message: message,
 		},
 	}

@@ -6,6 +6,9 @@ import (
 	"github.com/fivemanage/lite/internal/service/token"
 	"github.com/fivemanage/lite/pkg/cache"
 	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
+
+	_ "github.com/fivemanage/lite/docs"
 )
 
 func Add(group *echo.Group,
@@ -14,6 +17,8 @@ func Add(group *echo.Group,
 	logService *log.Service,
 	cache *cache.Cache,
 ) {
+	group.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	registerMediaApi(group, fileService, tokenService, cache)
 	registerLogsApi(group, logService, tokenService, cache)
 }

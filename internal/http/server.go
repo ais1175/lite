@@ -50,10 +50,17 @@ func NewServer(
 	app := echo.New()
 	app.Debug = true
 
+	app.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOriginFunc: func(origin string) (bool, error) {
+			return true, nil
+		},
+		AllowHeaders:     []string{"*"},
+		AllowCredentials: true,
+	}))
+
 	app.Use(otelecho.Middleware("lite-api"))
 	app.Use(middleware.Recover())
 	app.Use(internalmiddleware.AppContext)
-	app.Use(middleware.CORS())
 	app.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
 
 	app.Validator = &_validator.CustomValidator{Validator: validator.New()}

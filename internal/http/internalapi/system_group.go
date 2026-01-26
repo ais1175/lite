@@ -8,18 +8,41 @@ import (
 )
 
 func registerSystemApi(group *echo.Group, systemService *system.Service) {
-	group.GET("/system/version", func(c echo.Context) error {
-		status, err := systemService.GetVersionStatus()
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, echo.Map{
-				"error": err.Error(),
-			})
-		}
+	h := &systemHandler{systemService: systemService}
+	group.GET("/system/version", h.getVersion)
+	group.GET("/system/config", h.getConfig)
+}
 
-		return c.JSON(http.StatusOK, status)
-	})
+type systemHandler struct {
+	systemService *system.Service
+}
 
-	group.GET("/system/config", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, systemService.GetConfig())
-	})
+// getVersion godoc
+// @Summary      Get system version
+// @Description  Get the current system version and update status
+// @Tags         system
+// @Produce      json
+// @Success      200  {object}  system.VersionStatus
+// @Failure      500  {object}  echo.Map
+// @Router       /dash/system/version [get]
+func (h *systemHandler) getVersion(c echo.Context) error {
+	status, err := h.systemService.GetVersionStatus()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, status)
+}
+
+// getConfig godoc
+// @Summary      Get system config
+// @Description  Get the current system configuration
+// @Tags         system
+// @Produce      json
+// @Success      200  {object}  system.SystemConfig
+// @Router       /dash/system/config [get]
+func (h *systemHandler) getConfig(c echo.Context) error {
+	return c.JSON(http.StatusOK, h.systemService.GetConfig())
 }
